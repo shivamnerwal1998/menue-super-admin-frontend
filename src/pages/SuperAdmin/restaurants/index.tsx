@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { api } from '../../../utils/api'
 import RestaurantCard from '../../../components/superAdmin/RestaurantCard'
 import Pagination from '../../../components/shared/Pagination'
+import EditRestaurantModal from '../../../components/superAdmin/EditRestaurantModal'
+import StatusModal from '../../../components/shared/StatusModal'
+import { superAdmin } from '../../../utils/constants'
 
 type Restaurant = {
   id: number
@@ -40,6 +43,18 @@ export default function RestaurantsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
+  const [editingRestaurant, setEditingRestaurant] = useState<any>(null)
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean
+    type: 'success' | 'error'
+    title: string
+    message: string
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+  })
   const limit = 10
 
   useEffect(() => {
@@ -52,7 +67,7 @@ export default function RestaurantsPage() {
       setError(null)
 
       const response: ApiResponse = await api.get(
-        `/super-admin/restaurants?page=${currentPage}&limit=${limit}`,
+        `${superAdmin.getRestaurants}?page=${currentPage}&limit=${limit}`,
       )
 
       if (response.success && response.data) {
@@ -70,9 +85,8 @@ export default function RestaurantsPage() {
     }
   }
 
-  const handleEdit = (restaurant: Restaurant) => {
-    alert(`Edit: ${restaurant.name}`)
-    // TODO: Open edit modal with restaurant data
+  const handleEdit = (restaurant: any) => {
+    setEditingRestaurant(restaurant)
   }
 
   const handleToggle = async (id: number, isActive: boolean) => {
@@ -82,12 +96,25 @@ export default function RestaurantsPage() {
     )
 
     try {
-      // ✅ Real API call for toggle
-      await api.patch(`/super-admin/restaurants/${id}/toggle`, { isActive })
+      await api.patch(`/super-admin/restaurants/${id}/status`, { isActive })
+
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Success!',
+        message: `Restaurant ${isActive ? 'enabled' : 'disabled'} successfully`,
+      })
     } catch (error) {
       console.error('Failed to toggle restaurant:', error)
       // Revert on error
       fetchRestaurants()
+
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Toggle Failed',
+        message: 'Failed to update restaurant status',
+      })
     }
   }
 
@@ -153,6 +180,21 @@ export default function RestaurantsPage() {
 
   return (
     <div className="space-y-6">
+      <EditRestaurantModal
+        isOpen={!!editingRestaurant}
+        onClose={() => setEditingRestaurant(null)}
+        restaurant={editingRestaurant}
+        onSuccess={fetchRestaurants}
+      />
+
+      {/* Status Modal */}
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal((prev) => ({ ...prev, isOpen: false }))}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+      />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
