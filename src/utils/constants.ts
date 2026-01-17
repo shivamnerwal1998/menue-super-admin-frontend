@@ -7,3 +7,18 @@ export const superAdmin = {
   getRestaurants: '/super-admin/restaurants',
   getUsers: '/super-admin/users',
 } as const
+
+export const admin = {
+  // Categories
+  createCategory: '/admin/categories',
+  updateCategory: (id: number) => `/admin/categories/${id}`,
+  deleteCategory: (id: number) => `/admin/categories/${id}`,
+  getCategories: '/admin/categories',
+
+  // Items
+  createItem: '/admin/items',
+  updateItem: (id: number) => `/admin/items/${id}`,
+  deleteItem: (id: number) => `/admin/items/${id}`,
+  getItems: '/admin/items',
+  toggleItemAvailability: (id: number) => `/admin/items/${id}/toggle`,
+} as const
