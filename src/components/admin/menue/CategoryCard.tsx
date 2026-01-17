@@ -1,5 +1,6 @@
 // src/components/admin/menue/CategoryCard.tsx
 import { Edit2, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react'
+import { useState } from 'react'
 import { Category, Item } from '../../../types/menue'
 import ItemCard from './ItemCard'
 import LoadMoreButton from '../common/LoadMoreButton'
@@ -44,18 +45,29 @@ export default function CategoryCard({
   level = 0,
   children,
 }: CategoryCardProps) {
+  const [showAddOptions, setShowAddOptions] = useState(false)
+  const [addType, setAddType] = useState<'item' | 'subcategory'>('item')
+
   const vegCount = items.filter((i) => i.isVeg).length
   const nonVegCount = items.filter((i) => !i.isVeg).length
 
-  // Visual styling based on nesting level
   const levelStyles = {
-    0: 'bg-white border-gray-200', // Root
-    1: 'bg-gray-50 border-l-4 border-l-blue-400 ml-4', // Child
-    2: 'bg-blue-50 border-l-4 border-l-blue-600 ml-8', // Grandchild
+    0: 'bg-white border-gray-200',
+    1: 'bg-gray-50 border-l-4 border-l-blue-400 ml-4',
+    2: 'bg-blue-50 border-l-4 border-l-blue-600 ml-8',
   }
 
   const levelClass =
     levelStyles[level as keyof typeof levelStyles] || levelStyles[0]
+
+  const handleAdd = () => {
+    if (addType === 'item') {
+      onAddItem()
+    } else if (onAddSubcategory) {
+      onAddSubcategory()
+    }
+    setShowAddOptions(false)
+  }
 
   return (
     <div className={`rounded-xl border shadow-sm ${levelClass}`}>
@@ -100,7 +112,37 @@ export default function CategoryCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Add Button - Shown when expanded */}
+            {isExpanded && (
+              <>
+                {!showAddOptions ? (
+                  <button
+                    onClick={() => setShowAddOptions(true)}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAdd}
+                      className="px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition text-sm font-medium"
+                    >
+                      Continue
+                    </button>
+                    <button
+                      onClick={() => setShowAddOptions(false)}
+                      className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
             <button
               onClick={onEdit}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
@@ -128,16 +170,39 @@ export default function CategoryCard({
           </div>
         </div>
 
-        {/* Add Subcategory Button (Only for level 0 and 1) */}
-        {isExpanded && level < 2 && onAddSubcategory && (
+        {/* Add Options Radio Buttons - Show below header when expanded */}
+        {isExpanded && showAddOptions && (
           <div className="mt-3 pt-3 border-t border-gray-200">
-            <button
-              onClick={onAddSubcategory}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium border border-blue-200"
-            >
-              <Plus className="w-4 h-4" />
-              Add Subcategory
-            </button>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name={`add-type-${category.id}`}
+                    checked={addType === 'item'}
+                    onChange={() => setAddType('item')}
+                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    Add Item
+                  </span>
+                </label>
+                {level < 2 && onAddSubcategory && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name={`add-type-${category.id}`}
+                      checked={addType === 'subcategory'}
+                      onChange={() => setAddType('subcategory')}
+                      className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Add Subcategory
+                    </span>
+                  </label>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -151,21 +216,19 @@ export default function CategoryCard({
       {isExpanded && (
         <div className="p-4">
           {items.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-3">
-                No items in this category yet
-              </p>
+            <div>
+              {/* <p className="text-gray-500 mb-3">No items in this category yet</p>
               <button
                 onClick={onAddItem}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Add First Item
-              </button>
+              </button> */}
             </div>
           ) : (
             <>
-              <div className="grid gap-3 mb-3">
+              <div className="grid gap-3">
                 {items.map((item) => (
                   <ItemCard
                     key={item.id}
@@ -177,7 +240,6 @@ export default function CategoryCard({
                 ))}
               </div>
 
-              {/* Load More Items */}
               {itemsPagination && onLoadMoreItems && (
                 <LoadMoreButton
                   onLoadMore={onLoadMoreItems}
@@ -188,14 +250,6 @@ export default function CategoryCard({
                   itemName="items"
                 />
               )}
-
-              <button
-                onClick={onAddItem}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                Add Item
-              </button>
             </>
           )}
         </div>
