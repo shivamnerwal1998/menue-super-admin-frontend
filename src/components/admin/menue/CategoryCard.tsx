@@ -1,5 +1,4 @@
 // src/components/admin/menue/CategoryCard.tsx
-import { useState } from 'react'
 import { Edit2, Trash2, ChevronDown, ChevronUp, Plus } from 'lucide-react'
 import { Category, Item } from '../../../types/menue'
 import ItemCard from './ItemCard'
@@ -16,6 +15,8 @@ interface CategoryCardProps {
   onDeleteItem: (item: Item) => void
   onToggleItemAvailability: (item: Item) => void
   onLoadMoreItems?: () => void
+  isExpanded: boolean
+  onToggleExpand: () => void
   itemsPagination?: {
     currentCount: number
     totalCount: number
@@ -37,12 +38,12 @@ export default function CategoryCard({
   onDeleteItem,
   onToggleItemAvailability,
   onLoadMoreItems,
+  isExpanded,
+  onToggleExpand,
   itemsPagination,
   level = 0,
   children,
 }: CategoryCardProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
-
   const vegCount = items.filter((i) => i.isVeg).length
   const nonVegCount = items.filter((i) => !i.isVeg).length
 
@@ -53,7 +54,8 @@ export default function CategoryCard({
     2: 'bg-blue-50 border-l-4 border-l-blue-600 ml-8', // Grandchild
   }
 
-  const levelClass = levelStyles[level as keyof typeof levelStyles] || levelStyles[0]
+  const levelClass =
+    levelStyles[level as keyof typeof levelStyles] || levelStyles[0]
 
   return (
     <div className={`rounded-xl border shadow-sm ${levelClass}`}>
@@ -77,7 +79,9 @@ export default function CategoryCard({
               )}
             </div>
             {category.description && (
-              <p className="text-sm text-gray-600 mb-2">{category.description}</p>
+              <p className="text-sm text-gray-600 mb-2">
+                {category.description}
+              </p>
             )}
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 flex-wrap">
               <span>{items.length} items</span>
@@ -112,7 +116,7 @@ export default function CategoryCard({
               <Trash2 className="w-4 h-4 text-red-600" />
             </button>
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={onToggleExpand}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
             >
               {isExpanded ? (
@@ -140,9 +144,7 @@ export default function CategoryCard({
 
       {/* Subcategories (Children) */}
       {isExpanded && children && (
-        <div className="p-4 space-y-3 bg-gray-50/50">
-          {children}
-        </div>
+        <div className="p-4 space-y-3 bg-gray-50/50">{children}</div>
       )}
 
       {/* Items List */}
