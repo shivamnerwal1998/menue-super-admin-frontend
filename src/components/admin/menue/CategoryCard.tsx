@@ -18,6 +18,7 @@ interface CategoryCardProps {
   onLoadMoreItems?: () => void
   isExpanded: boolean
   onToggleExpand: () => void
+  onToggleActive?: () => void
   itemsPagination?: {
     currentCount: number
     totalCount: number
@@ -41,6 +42,7 @@ export default function CategoryCard({
   onLoadMoreItems,
   isExpanded,
   onToggleExpand,
+  onToggleActive,
   itemsPagination,
   level = 0,
   children,
@@ -143,15 +145,43 @@ export default function CategoryCard({
               </>
             )}
 
+            {/* Toggle Active/Inactive Button */}
+            {onToggleActive && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleActive()
+                }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
+                  category.isActive
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+                }`}
+                title={
+                  category.isActive
+                    ? 'Click to deactivate'
+                    : 'Click to activate'
+                }
+              >
+                {category.isActive ? '✓ Active' : '○ Inactive'}
+              </button>
+            )}
+
             <button
-              onClick={onEdit}
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
               className="p-2 hover:bg-gray-100 rounded-lg transition"
               title="Edit category"
             >
               <Edit2 className="w-4 h-4 text-gray-600" />
             </button>
             <button
-              onClick={onDelete}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
               className="p-2 hover:bg-red-50 rounded-lg transition"
               title="Delete category"
             >
@@ -216,16 +246,7 @@ export default function CategoryCard({
       {isExpanded && (
         <div className="p-4">
           {items.length === 0 ? (
-            <div>
-              {/* <p className="text-gray-500 mb-3">No items in this category yet</p>
-              <button
-                onClick={onAddItem}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
-              >
-                <Plus className="w-4 h-4" />
-                Add First Item
-              </button> */}
-            </div>
+            <div>{/* Empty state - no items */}</div>
           ) : (
             <>
               <div className="grid gap-3">

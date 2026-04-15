@@ -14,11 +14,13 @@ export const admin = {
   updateCategory: (id: number) => `/admin/categories/${id}`,
   deleteCategory: (id: number) => `/admin/categories/${id}`,
   getCategories: '/admin/categories',
+  toggleCategory: (id: number) => `/admin/categories/${id}/toggle`,
 
   // Items
   createItem: '/admin/items',
   updateItem: (id: number) => `/admin/items/${id}`,
   deleteItem: (id: number) => `/admin/items/${id}`,
   getItems: '/admin/items',
-  toggleItemAvailability: (id: number) => `/admin/items/${id}/toggle`,
+  toggleItemAvailability: (id: number) =>
+    `/admin/items/${id}/toggle-availability`,
 } as const

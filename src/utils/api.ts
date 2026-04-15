@@ -68,10 +68,12 @@ class ApiClient {
 
       // Handle other error responses
       if (!response.ok) {
+        console.log(" Error from Interceptors : response is not okay ");
         const errorMessage = 
           data?.message || 
           data?.error || 
           `Request failed with status ${response.status}`;
+          console.log(errorMessage);
         throw new Error(errorMessage);
       }
 

@@ -101,6 +101,17 @@ export const categoryService = {
   delete: async (id: number): Promise<ApiSuccessResponse<null>> => {
     return await api.delete<ApiSuccessResponse<null>>(admin.deleteCategory(id))
   },
+
+  /**
+   * Toggle category active/inactive status
+   * PATCH /admin/categories/:id/toggle
+   * NO BODY REQUIRED - Backend automatically toggles current status
+   */
+  toggleActive: async (id: number): Promise<ApiSuccessResponse<Category>> => {
+    return await api.patch<ApiSuccessResponse<Category>>(
+      admin.toggleCategory(id),
+    )
+  },
 }
 
 /**
@@ -169,7 +180,8 @@ export const itemService = {
 
   /**
    * Toggle item availability
-   * PATCH /admin/items/:id/toggle
+   * PATCH /admin/items/:id/toggle-availability
+   * NO BODY REQUIRED - Backend automatically toggles current status
    */
   toggleAvailability: async (id: number): Promise<ApiSuccessResponse<Item>> => {
     return await api.patch<ApiSuccessResponse<Item>>(

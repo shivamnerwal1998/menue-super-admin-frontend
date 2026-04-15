@@ -14,9 +14,6 @@ import LoadMoreButton from '../../../components/admin/common/LoadMoreButton'
 import { categoryService, itemService } from '../../../utils/menuService'
 
 export default function MenuManagement() {
-  // ============================================
-  // STATE MANAGEMENT
-  // ============================================
   const [categories, setCategories] = useState<Category[]>([])
   const [categoryPagination, setCategoryPagination] = useState({
     page: 1,
@@ -355,7 +352,7 @@ export default function MenuManagement() {
             [response.data.id]: {
               items: [],
               page: 1,
-              limit: 10,
+              limit: 2,
               total: 0,
               hasMore: false,
               isLoading: false,
@@ -384,22 +381,25 @@ export default function MenuManagement() {
 
   const handleDeleteCategory = async (category: Category) => {
     const hasChildren = categories.some((c) => c.parentId === category.id)
-    if (
-      hasChildren &&
-      !confirm(`Delete ${category.name} and all its subcategories?`)
-    )
-      return
-
     const categoryItems = itemsByCategory[category.id]?.items || []
-    if (
-      categoryItems.length > 0 &&
-      !confirm(`Delete ${category.name} and its ${categoryItems.length} items?`)
-    )
-      return
+
+    // Show confirmation with details
+    let confirmMessage = `Delete "${category.name}"?`
+    if (hasChildren) {
+      confirmMessage += '\n\nThis will also delete all subcategories.'
+    }
+    if (categoryItems.length > 0) {
+      confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
+    }
+    confirmMessage += '\n\nThis action cannot be undone.'
+
+    if (!confirm(confirmMessage)) return
 
     try {
+      // ✅ NEW: Call API first
       await categoryService.delete(category.id)
 
+      // ✅ SUCCESS: Update local state (existing logic)
       const deleteWithChildren = (catId: number) => {
         const children = categories.filter((c) => c.parentId === catId)
         children.forEach((child) => deleteWithChildren(child.id))
@@ -412,9 +412,34 @@ export default function MenuManagement() {
       }
 
       deleteWithChildren(category.id)
-      showToast('Category deleted', 'success')
+      showToast('Category deleted successfully', 'success')
     } catch (error) {
+      // ✅ ERROR: Show backend message (e.g., "Cannot delete category. It contains 12 item(s)")
+      console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
+    }
+  }
+
+  const handleToggleCategoryActive = async (category: Category) => {
+    try {
+      const response = await categoryService.toggleActive(category.id)
+
+      if (response.success) {
+        // Update local state - update the specific category
+        setCategories((cats) =>
+          cats.map((c) =>
+            c.id === category.id
+              ? { ...c, isActive: response.data.isActive }
+              : c,
+          ),
+        )
+
+        const status = response.data.isActive ? 'activated' : 'deactivated'
+        showToast(`Category ${status} successfully`, 'success')
+      }
+    } catch (error) {
+      console.error('Toggle category error:', error)
+      showToast(error.message || 'Failed to toggle category status', 'error')
     }
   }
 
@@ -511,11 +536,14 @@ export default function MenuManagement() {
   }
 
   const handleDeleteItem = async (item: Item) => {
-    if (!confirm(`Delete ${item.name}?`)) return
+    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
+      return
 
     try {
+      // ✅ NEW: Call API first
       await itemService.delete(item.id)
 
+      // ✅ SUCCESS: Update local state (existing logic)
       setItemsByCategory((prev) => ({
         ...prev,
         [item.categoryId]: {
@@ -525,6 +553,7 @@ export default function MenuManagement() {
         },
       }))
 
+      // Update category item count
       setCategories((prev) =>
         prev.map((c) =>
           c.id === item.categoryId
@@ -533,12 +562,15 @@ export default function MenuManagement() {
         ),
       )
 
+      // Remove from search results if in search mode
       if (isSearchMode) {
         setSearchResults((prev) => prev.filter((i) => i.id !== item.id))
       }
 
-      showToast('Item deleted', 'success')
+      showToast('Item deleted successfully', 'success')
     } catch (error) {
+      // ✅ ERROR: Show backend message
+      console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
   }
@@ -650,10 +682,11 @@ export default function MenuManagement() {
         <CategoryCard
           category={category}
           items={isExpanded ? categoryItems : []}
-          isExpanded={isExpanded} // ← ADD THIS
-          onToggleExpand={() => handleToggleCategory(category.id)} // ← ADD THIS
+          isExpanded={isExpanded}
+          onToggleExpand={() => handleToggleCategory(category.id)}
           onEdit={() => handleOpenCategoryModal(category)}
           onDelete={() => handleDeleteCategory(category)}
+          onToggleActive={() => handleToggleCategoryActive(category)}
           onAddItem={() => handleOpenItemModal(undefined, category.id)}
           onAddSubcategory={
             level < 2
