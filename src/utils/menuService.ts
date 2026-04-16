@@ -13,7 +13,26 @@ import { api } from './api'
 
 /**
  * GET Query Parameters
- */
+ */  type CategoryStats = {
+   total: number;
+   active: number;
+   inactive: number;
+ };
+ 
+ type ItemStats = {
+   total: number;
+   available: number;
+   unavailable: number;
+   veg: number;
+   nonVeg: number;
+ };
+ 
+ export type StatsData = {
+   categories: CategoryStats;
+   items: ItemStats;
+ };
+
+
 interface GetCategoriesParams {
   page?: number
   limit?: number
@@ -188,4 +207,10 @@ export const itemService = {
       admin.toggleItemAvailability(id),
     )
   },
+
+ getStats: async (): Promise<StatsData> => {
+  const response = await api.get<ApiSuccessResponse<StatsData>>(admin.stats);
+  return response.data;
+}
+  
 }

@@ -23,4 +23,7 @@ export const admin = {
   getItems: '/admin/items',
   toggleItemAvailability: (id: number) =>
     `/admin/items/${id}/toggle-availability`,
+
+  // Stats
+  stats : '/admin/stats'
 } as const

@@ -1,5 +1,9 @@
 // src/pages/Admin/dashboard/index.tsx
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { itemService, StatsData } from '../../../utils/menuService'
+import { ToastType } from '../../../types/menue'
+import Toast from '../../../components/admin/common/Toast'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -7,17 +11,56 @@ export default function AdminDashboard() {
   // Get user info from localStorage
   const userStr = localStorage.getItem('user')
   const user = userStr ? JSON.parse(userStr) : null
+  const [toast, setToast] = useState<ToastType | null>(null)
+  const [statsData, setStatsData] = useState<StatsData>({
+    categories: {
+      total: 0,
+      active: 0,
+      inactive: 0,
+    },
+    items: {
+      total: 0,
+      available: 0,
+      unavailable: 0,
+      veg: 0,
+      nonVeg: 0,
+    },
+  })
 
-  // Mock stats - will be replaced with real API data
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type })
+  }
+
+  const loadStats = async () => {
+    try {
+      const data: StatsData = await itemService.getStats()
+      setStatsData(data);
+    } catch (err) {
+      showToast('Error in fetching stats', 'error')
+    }
+  }
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  
   const stats = {
-    totalCategories: 5,
-    totalItems: 22,
-    activeItems: 22,
-    inactiveItems: 0,
+    totalCategories: statsData.categories.total,
+    totalItems: statsData?.items?.total,
+    activeItems: statsData?.items?.available,
+    inactiveItems: statsData?.items?.unavailable,
   }
 
   return (
     <div className="space-y-6">
+        {toast && (
+              <Toast
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(null)}
+              />
+            )}
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
         <h1 className="text-2xl font-bold mb-2">
@@ -81,7 +124,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Active Items */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+        {/* <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-green-100 rounded-lg">
               <svg
@@ -103,10 +146,10 @@ export default function AdminDashboard() {
           <p className="text-3xl font-bold text-green-600 mt-1">
             {stats.activeItems}
           </p>
-        </div>
+        </div> */}
 
         {/* Inactive Items */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+        {/* <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-red-100 rounded-lg">
               <svg
@@ -128,7 +171,7 @@ export default function AdminDashboard() {
           <p className="text-3xl font-bold text-red-600 mt-1">
             {stats.inactiveItems}
           </p>
-        </div>
+        </div> */}
       </div>
 
       {/* Quick Actions */}
@@ -189,7 +232,7 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => navigate('/admin/settings')}
-            className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition group"
+            className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition group hidden"
           >
             <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-500 transition">
               <svg
