@@ -446,94 +446,236 @@ export default function MenuManagement() {
   // ============================================
   // ITEM CRUD
   // ============================================
+  // const handleSaveItem = async (data: Partial<Item>) => {
+  //   setIsLoading(true)
+  //   setValidationErrors([])
+
+  //   try {
+  //     if (editingItem) {
+  //       const response = await itemService.update(editingItem.id, {
+  //         name: data.name,
+  //         description: data.description,
+  //         price: data.price,
+  //         categoryId: data.categoryId,
+  //         imageUrl: data.imageUrl,
+  //         isVeg: data.isVeg,
+  //         isAvailable: data.isAvailable,
+  //         sortOrder: data.sortOrder,
+  //       })
+
+  //       if (response.success) {
+  //         setItemsByCategory((prev) => ({
+  //           ...prev,
+  //           [editingItem.categoryId]: {
+  //             ...prev[editingItem.categoryId],
+  //             items: prev[editingItem.categoryId].items.map((i) =>
+  //               i.id === editingItem.id ? response.data : i,
+  //             ),
+  //           },
+  //         }))
+
+  //         if (isSearchMode) {
+  //           setSearchResults((prev) =>
+  //             prev.map((i) => (i.id === editingItem.id ? response.data : i)),
+  //           )
+  //         }
+
+  //         showToast('Item updated successfully', 'success')
+  //         setShowItemModal(false)
+  //         setEditingItem(undefined)
+  //       }
+  //     } else {
+  //       const response = await itemService.create({
+  //         name: data.name!,
+  //         description: data.description,
+  //         price: data.price!,
+  //         categoryId: data.categoryId!,
+  //         imageUrl: data.imageUrl || null,
+  //         isVeg: data.isVeg!,
+  //         isAvailable: data.isAvailable!,
+  //         sortOrder:
+  //           data.sortOrder ||
+  //           (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
+  //       })
+
+  //       if (response.success) {
+  //         setItemsByCategory((prev) => ({
+  //           ...prev,
+  //           [data.categoryId!]: {
+  //             ...prev[data.categoryId!],
+  //             items: [...(prev[data.categoryId!]?.items || []), response.data],
+  //             total: (prev[data.categoryId!]?.total || 0) + 1,
+  //           },
+  //         }))
+
+  //         setCategories((prev) =>
+  //           prev.map((c) =>
+  //             c.id === data.categoryId
+  //               ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+  //               : c,
+  //           ),
+  //         )
+
+  //         showToast('Item added successfully', 'success')
+  //         setShowItemModal(false)
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Item save error:', error)
+
+  //     if (error.code === 'VALIDATION_ERROR' && error.details) {
+  //       setValidationErrors(error.details)
+  //       showToast('Please fix the validation errors', 'error')
+  //       return
+  //     }
+
+  //     showToast(error.message || 'Failed to save item', 'error')
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
   const handleSaveItem = async (data: Partial<Item>) => {
-    setIsLoading(true)
-    setValidationErrors([])
+  setIsLoading(true)
+  setValidationErrors([])
 
-    try {
-      if (editingItem) {
-        const response = await itemService.update(editingItem.id, {
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          categoryId: data.categoryId,
-          imageUrl: data.imageUrl,
-          isVeg: data.isVeg,
-          isAvailable: data.isAvailable,
-          sortOrder: data.sortOrder,
-        })
+  try {
+    if (editingItem) {
+      const response = await itemService.update(editingItem.id, {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        categoryId: data.categoryId,
+        imageUrl: data.imageUrl,
+        isVeg: data.isVeg,
+        isAvailable: data.isAvailable,
+        sortOrder: data.sortOrder,
+      })
 
-        if (response.success) {
-          setItemsByCategory((prev) => ({
-            ...prev,
-            [editingItem.categoryId]: {
-              ...prev[editingItem.categoryId],
-              items: prev[editingItem.categoryId].items.map((i) =>
-                i.id === editingItem.id ? response.data : i,
+      if (response.success) {
+        const oldCategoryId = editingItem.categoryId
+        const newCategoryId = response.data.categoryId
+
+        // ✅ CHECK: Did category change?
+        if (oldCategoryId !== newCategoryId) {
+          // Remove from old category
+          if (itemsByCategory[oldCategoryId]) {
+            setItemsByCategory((prev) => ({
+              ...prev,
+              [oldCategoryId]: {
+                ...prev[oldCategoryId],
+                items: prev[oldCategoryId].items.filter((i) => i.id !== editingItem.id),
+                total: prev[oldCategoryId].total - 1,
+              },
+            }))
+
+            // Update old category's item count
+            setCategories((prev) =>
+              prev.map((c) =>
+                c.id === oldCategoryId
+                  ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
+                  : c,
               ),
-            },
-          }))
-
-          if (isSearchMode) {
-            setSearchResults((prev) =>
-              prev.map((i) => (i.id === editingItem.id ? response.data : i)),
             )
           }
 
-          showToast('Item updated successfully', 'success')
-          setShowItemModal(false)
-          setEditingItem(undefined)
+          // Add to new category
+          if (itemsByCategory[newCategoryId]) {
+            setItemsByCategory((prev) => ({
+              ...prev,
+              [newCategoryId]: {
+                ...prev[newCategoryId],
+                items: [...prev[newCategoryId].items, response.data],
+                total: prev[newCategoryId].total + 1,
+              },
+            }))
+
+            // Update new category's item count
+            setCategories((prev) =>
+              prev.map((c) =>
+                c.id === newCategoryId
+                  ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+                  : c,
+              ),
+            )
+          }
+        } else {
+          // ✅ Same category - just update the item
+          if (itemsByCategory[oldCategoryId]) {
+            setItemsByCategory((prev) => ({
+              ...prev,
+              [oldCategoryId]: {
+                ...prev[oldCategoryId],
+                items: prev[oldCategoryId].items.map((i) =>
+                  i.id === editingItem.id ? response.data : i,
+                ),
+              },
+            }))
+          }
         }
-      } else {
-        const response = await itemService.create({
-          name: data.name!,
-          description: data.description,
-          price: data.price!,
-          categoryId: data.categoryId!,
-          imageUrl: data.imageUrl || null,
-          isVeg: data.isVeg!,
-          isAvailable: data.isAvailable!,
-          sortOrder:
-            data.sortOrder ||
-            (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
-        })
 
-        if (response.success) {
-          setItemsByCategory((prev) => ({
-            ...prev,
-            [data.categoryId!]: {
-              ...prev[data.categoryId!],
-              items: [...(prev[data.categoryId!]?.items || []), response.data],
-              total: (prev[data.categoryId!]?.total || 0) + 1,
-            },
-          }))
-
-          setCategories((prev) =>
-            prev.map((c) =>
-              c.id === data.categoryId
-                ? { ...c, itemCount: (c.itemCount || 0) + 1 }
-                : c,
-            ),
+        // Update search results if in search mode
+        if (isSearchMode) {
+          setSearchResults((prev) =>
+            prev.map((i) => (i.id === editingItem.id ? response.data : i)),
           )
-
-          showToast('Item added successfully', 'success')
-          setShowItemModal(false)
         }
-      }
-    } catch (error) {
-      console.error('Item save error:', error)
 
-      if (error.code === 'VALIDATION_ERROR' && error.details) {
-        setValidationErrors(error.details)
-        showToast('Please fix the validation errors', 'error')
-        return
+        showToast('Item updated successfully', 'success')
+        setShowItemModal(false)
+        setEditingItem(undefined)
       }
+    } else {
+      // CREATE logic (keep as is)
+      const response = await itemService.create({
+        name: data.name!,
+        description: data.description,
+        price: data.price!,
+        categoryId: data.categoryId!,
+        imageUrl: data.imageUrl || null,
+        isVeg: data.isVeg!,
+        isAvailable: data.isAvailable!,
+        sortOrder:
+          data.sortOrder ||
+          (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
+      })
 
-      showToast(error.message || 'Failed to save item', 'error')
-    } finally {
-      setIsLoading(false)
+      if (response.success) {
+        setItemsByCategory((prev) => ({
+          ...prev,
+          [data.categoryId!]: {
+            ...prev[data.categoryId!],
+            items: [...(prev[data.categoryId!]?.items || []), response.data],
+            total: (prev[data.categoryId!]?.total || 0) + 1,
+          },
+        }))
+
+        setCategories((prev) =>
+          prev.map((c) =>
+            c.id === data.categoryId
+              ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+              : c,
+          ),
+        )
+
+        showToast('Item added successfully', 'success')
+        setShowItemModal(false)
+      }
     }
+  } catch (error) {
+    console.error('Item save error:', error)
+
+    if (error.code === 'VALIDATION_ERROR' && error.details) {
+      setValidationErrors(error.details)
+      showToast('Please fix the validation errors', 'error')
+      return
+    }
+
+    showToast(error.message || 'Failed to save item', 'error')
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleDeleteItem = async (item: Item) => {
     if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
@@ -576,37 +718,46 @@ export default function MenuManagement() {
   }
 
   const handleToggleItemAvailability = async (item: Item) => {
-    try {
-      const response = await itemService.toggleAvailability(item.id)
+  try {
+    const response = await itemService.toggleAvailability(item.id)
 
-      if (response.success) {
+    if (response.success) {
+      console.log("Availability Toggled");
+      
+   
+      const updatedItem = { ...item, ...response.data }
+      
+      // Update in itemsByCategory if category is loaded
+      if (itemsByCategory[item.categoryId]) {
         setItemsByCategory((prev) => ({
           ...prev,
           [item.categoryId]: {
             ...prev[item.categoryId],
             items: prev[item.categoryId].items.map((i) =>
-              i.id === item.id ? response.data : i,
+              i.id === item.id ? updatedItem : i,
             ),
           },
         }))
+      }
 
-        if (isSearchMode) {
-          setSearchResults((prev) =>
-            prev.map((i) => (i.id === item.id ? response.data : i)),
-          )
-        }
-
-        showToast(
-          item.isAvailable
-            ? 'Item marked as unavailable'
-            : 'Item marked as available',
-          'success',
+      // Update search results if in search mode
+      if (isSearchMode) {
+        setSearchResults((prev) =>
+          prev.map((i) => (i.id === item.id ? updatedItem : i)),
         )
       }
-    } catch (error) {
-      showToast(error.message || 'Failed to update item', 'error')
+
+      showToast(
+        item.isAvailable
+          ? 'Item marked as unavailable'
+          : 'Item marked as available',
+        'success',
+      )
     }
+  } catch (error) {
+    showToast(error.message || 'Failed to update item', 'error')
   }
+}
 
   // ============================================
   // HELPERS
