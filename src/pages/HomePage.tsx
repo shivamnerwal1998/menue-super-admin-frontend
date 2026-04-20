@@ -98,7 +98,7 @@ export default function HomePage() {
         )
 
         if (response.success && response.data?.token) {
-          // ✅ HERE - login() IS called!
+      
           login(response.data.token, 'ADMIN', response?.data?.user)
 
           // Optional: Store user info

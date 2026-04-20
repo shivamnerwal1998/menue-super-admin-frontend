@@ -556,9 +556,9 @@ export default function MenuManagement() {
         const oldCategoryId = editingItem.categoryId
         const newCategoryId = response.data.categoryId
 
-        // ✅ CHECK: Did category change?
+   
         if (oldCategoryId !== newCategoryId) {
-          // Remove from old category
+   
           if (itemsByCategory[oldCategoryId]) {
             setItemsByCategory((prev) => ({
               ...prev,
@@ -671,7 +671,7 @@ export default function MenuManagement() {
       return
     }
 
-    showToast(error.message || 'Failed to save item', 'error')
+    showToast('Failed to save item', 'error')
   } finally {
     setIsLoading(false)
   }

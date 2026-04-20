@@ -223,7 +223,7 @@ export default function ItemFormModal({
           </div>
 
           {/* Image URL */}
-          <div>
+          <div className='hidden'>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Image URL (Optional)
             </label>
