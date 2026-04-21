@@ -32,6 +32,21 @@ import { api } from './api'
    items: ItemStats;
  };
 
+ export type RestaurantData = {
+  id: number
+  name: string
+  contact: string
+  email: string
+  address: string | null
+  gmapLink: string | null
+  instagram: string | null
+  facebook: string | null
+  website: string | null
+  isActive: boolean
+  createdAt: string
+  qrAddress: string
+}
+
 
 interface GetCategoriesParams {
   page?: number
@@ -211,6 +226,17 @@ export const itemService = {
  getStats: async (): Promise<StatsData> => {
   const response = await api.get<ApiSuccessResponse<StatsData>>(admin.stats);
   return response.data;
-}
+},
+
+
+  /**
+   * Get restaurant/entity details
+   * GET /admin/entity
+   */
+  getEntity: async (): Promise<RestaurantData> => {
+    const response = await api.get<ApiSuccessResponse<RestaurantData>>(admin.entity)
+    return response.data
+  }
+
   
 }

@@ -25,5 +25,7 @@ export const admin = {
     `/admin/items/${id}/toggle-availability`,
 
   // Stats
-  stats : '/admin/stats'
+  stats : '/admin/stats',
+  // entity 
+  entity: '/admin/entity',
 } as const
