@@ -59,8 +59,12 @@ export default function MenuManagement() {
 
   const [toast, setToast] = useState<ToastType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    [],
+  )
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set(),
+  )
 
   // ============================================
   // INITIAL LOAD
@@ -100,7 +104,7 @@ export default function MenuManagement() {
         hasMore: shouldLoadMore,
         isLoading: false,
       })
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
       setCategoryPagination((prev) => ({ ...prev, isLoading: false }))
@@ -131,7 +135,7 @@ export default function MenuManagement() {
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load children error:', error)
       showToast(error.message || 'Failed to load subcategories', 'error')
     }
@@ -175,7 +179,7 @@ export default function MenuManagement() {
           isLoading: false,
         },
       }))
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
       setItemsByCategory((prev) => ({
@@ -228,7 +232,7 @@ export default function MenuManagement() {
           isLoading: false,
         })
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Search error:', error)
       showToast(error.message || 'Search failed', 'error')
       setSearchPagination((prev) => ({ ...prev, isLoading: false }))
@@ -356,7 +360,7 @@ export default function MenuManagement() {
           setSelectedParentId(null)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Category save error:', error)
 
       if (error.code === 'VALIDATION_ERROR' && error.details) {
@@ -376,7 +380,8 @@ export default function MenuManagement() {
     const categoryItems = itemsByCategory[category.id]?.items || []
 
     let confirmMessage = `Delete "${category.name}"?`
-    if (hasChildren) confirmMessage += '\n\nThis will also delete all subcategories.'
+    if (hasChildren)
+      confirmMessage += '\n\nThis will also delete all subcategories.'
     if (categoryItems.length > 0)
       confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
     confirmMessage += '\n\nThis action cannot be undone.'
@@ -399,7 +404,7 @@ export default function MenuManagement() {
 
       deleteWithChildren(category.id)
       showToast('Category deleted successfully', 'success')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
     }
@@ -420,7 +425,7 @@ export default function MenuManagement() {
         const status = response.data.isActive ? 'activated' : 'deactivated'
         showToast(`Category ${status} successfully`, 'success')
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Toggle category error:', error)
       showToast(error.message || 'Failed to toggle category status', 'error')
     }
@@ -548,7 +553,7 @@ export default function MenuManagement() {
           setShowItemModal(false)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Item save error:', error)
 
       if (error.code === 'VALIDATION_ERROR' && error.details) {
@@ -564,7 +569,8 @@ export default function MenuManagement() {
   }
 
   const handleDeleteItem = async (item: Item) => {
-    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`)) return
+    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
+      return
 
     try {
       await itemService.delete(item.id)
@@ -591,7 +597,7 @@ export default function MenuManagement() {
       }
 
       showToast('Item deleted successfully', 'success')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
@@ -623,11 +629,13 @@ export default function MenuManagement() {
         }
 
         showToast(
-          item.isAvailable ? 'Item marked as unavailable' : 'Item marked as available',
+          item.isAvailable
+            ? 'Item marked as unavailable'
+            : 'Item marked as available',
           'success',
         )
       }
-    } catch (error: any) {
+    } catch (error) {
       showToast(error.message || 'Failed to update item', 'error')
     }
   }
@@ -747,7 +755,9 @@ export default function MenuManagement() {
         >
           {category.children && category.children.length > 0 && isExpanded && (
             <div className="space-y-3 mt-3">
-              {category.children.map((child) => renderCategory(child, level + 1))}
+              {category.children.map((child) =>
+                renderCategory(child, level + 1),
+              )}
             </div>
           )}
         </CategoryCard>
@@ -779,13 +789,6 @@ export default function MenuManagement() {
             Manage your categories and menu items
           </p>
         </div>
-        <button
-          onClick={() => handleOpenCategoryModal()}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          Add Category
-        </button>
       </div>
 
       {/* Search Bar */}
@@ -856,7 +859,9 @@ export default function MenuManagement() {
             <>
               <div className="grid gap-3">
                 {searchResults.map((item) => {
-                  const category = categories.find((c) => c.id === item.categoryId)
+                  const category = categories.find(
+                    (c) => c.id === item.categoryId,
+                  )
                   return (
                     <div
                       key={item.id}
@@ -864,7 +869,9 @@ export default function MenuManagement() {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900">{item.name}</h4>
+                          <h4 className="font-medium text-gray-900">
+                            {item.name}
+                          </h4>
                           {item.isVeg ? (
                             <span className="w-5 h-5 border-2 border-green-600 flex items-center justify-center">
                               <span className="w-2 h-2 rounded-full bg-green-600" />
@@ -876,7 +883,9 @@ export default function MenuManagement() {
                           )}
                         </div>
                         {item.description && (
-                          <p className="text-sm text-gray-600 mb-1">{item.description}</p>
+                          <p className="text-sm text-gray-600 mb-1">
+                            {item.description}
+                          </p>
                         )}
                         <p className="text-xs text-gray-500">
                           {category?.name || 'Unknown Category'}
@@ -956,7 +965,9 @@ export default function MenuManagement() {
                   onLoadMore={() => loadCategories(categoryPagination.page + 1)}
                   hasMore={categoryPagination.hasMore}
                   isLoading={categoryPagination.isLoading}
-                  currentCount={categories.filter((c) => c.parentId === null).length}
+                  currentCount={
+                    categories.filter((c) => c.parentId === null).length
+                  }
                   totalCount={categoryPagination.total}
                   itemName="categories"
                 />

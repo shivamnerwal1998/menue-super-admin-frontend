@@ -188,13 +188,13 @@ export default function CategoryCard({
             >
               <Edit2 className="w-4 h-4 text-gray-600" />
             </button>
-            <button
+            {/* <button
               onClick={(e) => { e.stopPropagation(); onDelete() }}
               className="p-2 hover:bg-red-50 rounded-lg transition"
               title="Delete category"
             >
               <Trash2 className="w-4 h-4 text-red-600" />
-            </button>
+            </button> */}
 
             {/* Chevron with smooth CSS rotation */}
             <button onClick={onToggleExpand} className="p-2 hover:bg-gray-100 rounded-lg transition">

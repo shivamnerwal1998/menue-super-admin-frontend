@@ -161,7 +161,7 @@ export default function CategoryFormModal({
 
           {/* Parent Category Selector (Only if not pre-selected) */}
           {!parentId && (
-            <div>
+            <div className='hidden'>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Parent Category (Optional)
               </label>
@@ -206,7 +206,7 @@ export default function CategoryFormModal({
           )}
 
           {/* Sort Order */}
-          <div>
+          <div className='hidden'>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Sort Order
             </label>
