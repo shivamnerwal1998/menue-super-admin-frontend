@@ -1,3 +1,4 @@
+// src/pages/Admin/menu/index.tsx
 import { useState, useEffect } from 'react'
 import { Plus, Search, X } from 'lucide-react'
 import {
@@ -58,12 +59,8 @@ export default function MenuManagement() {
 
   const [toast, setToast] = useState<ToastType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    [],
-  )
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
-    new Set(),
-  )
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
 
   // ============================================
   // INITIAL LOAD
@@ -74,7 +71,6 @@ export default function MenuManagement() {
 
   const loadCategories = async (page = 1) => {
     setCategoryPagination((prev) => ({ ...prev, isLoading: true }))
-
     try {
       const response = await categoryService.getAll({
         page,
@@ -104,7 +100,7 @@ export default function MenuManagement() {
         hasMore: shouldLoadMore,
         isLoading: false,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
       setCategoryPagination((prev) => ({ ...prev, isLoading: false }))
@@ -130,13 +126,12 @@ export default function MenuManagement() {
       setCategories((prev) => {
         const parentIndex = prev.findIndex((c) => c.id === parentId)
         if (parentIndex === -1) return prev
-
         const newCategories = [...prev]
         const filtered = newCategories.filter((c) => c.parentId !== parentId)
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load children error:', error)
       showToast(error.message || 'Failed to load subcategories', 'error')
     }
@@ -180,7 +175,7 @@ export default function MenuManagement() {
           isLoading: false,
         },
       }))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
       setItemsByCategory((prev) => ({
@@ -233,7 +228,7 @@ export default function MenuManagement() {
           isLoading: false,
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Search error:', error)
       showToast(error.message || 'Search failed', 'error')
       setSearchPagination((prev) => ({ ...prev, isLoading: false }))
@@ -336,14 +331,11 @@ export default function MenuManagement() {
           }
 
           if (newCategory.parentId) {
-            // Auto-expand parent category to show new subcategory
             setExpandedCategories((prev) =>
               new Set(prev).add(newCategory.parentId!),
             )
-            // Load children to get the new subcategory
             await loadCategoryChildren(newCategory.parentId)
           } else {
-            // Add root category directly
             setCategories((prev) => [...prev, newCategory])
           }
 
@@ -364,7 +356,7 @@ export default function MenuManagement() {
           setSelectedParentId(null)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Category save error:', error)
 
       if (error.code === 'VALIDATION_ERROR' && error.details) {
@@ -383,23 +375,17 @@ export default function MenuManagement() {
     const hasChildren = categories.some((c) => c.parentId === category.id)
     const categoryItems = itemsByCategory[category.id]?.items || []
 
-    // Show confirmation with details
     let confirmMessage = `Delete "${category.name}"?`
-    if (hasChildren) {
-      confirmMessage += '\n\nThis will also delete all subcategories.'
-    }
-    if (categoryItems.length > 0) {
+    if (hasChildren) confirmMessage += '\n\nThis will also delete all subcategories.'
+    if (categoryItems.length > 0)
       confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
-    }
     confirmMessage += '\n\nThis action cannot be undone.'
 
     if (!confirm(confirmMessage)) return
 
     try {
-      // ✅ NEW: Call API first
       await categoryService.delete(category.id)
 
-      // ✅ SUCCESS: Update local state (existing logic)
       const deleteWithChildren = (catId: number) => {
         const children = categories.filter((c) => c.parentId === catId)
         children.forEach((child) => deleteWithChildren(child.id))
@@ -413,8 +399,7 @@ export default function MenuManagement() {
 
       deleteWithChildren(category.id)
       showToast('Category deleted successfully', 'success')
-    } catch (error) {
-      // ✅ ERROR: Show backend message (e.g., "Cannot delete category. It contains 12 item(s)")
+    } catch (error: any) {
       console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
     }
@@ -425,7 +410,6 @@ export default function MenuManagement() {
       const response = await categoryService.toggleActive(category.id)
 
       if (response.success) {
-        // Update local state - update the specific category
         setCategories((cats) =>
           cats.map((c) =>
             c.id === category.id
@@ -433,11 +417,10 @@ export default function MenuManagement() {
               : c,
           ),
         )
-
         const status = response.data.isActive ? 'activated' : 'deactivated'
         showToast(`Category ${status} successfully`, 'success')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Toggle category error:', error)
       showToast(error.message || 'Failed to toggle category status', 'error')
     }
@@ -446,246 +429,146 @@ export default function MenuManagement() {
   // ============================================
   // ITEM CRUD
   // ============================================
-  // const handleSaveItem = async (data: Partial<Item>) => {
-  //   setIsLoading(true)
-  //   setValidationErrors([])
-
-  //   try {
-  //     if (editingItem) {
-  //       const response = await itemService.update(editingItem.id, {
-  //         name: data.name,
-  //         description: data.description,
-  //         price: data.price,
-  //         categoryId: data.categoryId,
-  //         imageUrl: data.imageUrl,
-  //         isVeg: data.isVeg,
-  //         isAvailable: data.isAvailable,
-  //         sortOrder: data.sortOrder,
-  //       })
-
-  //       if (response.success) {
-  //         setItemsByCategory((prev) => ({
-  //           ...prev,
-  //           [editingItem.categoryId]: {
-  //             ...prev[editingItem.categoryId],
-  //             items: prev[editingItem.categoryId].items.map((i) =>
-  //               i.id === editingItem.id ? response.data : i,
-  //             ),
-  //           },
-  //         }))
-
-  //         if (isSearchMode) {
-  //           setSearchResults((prev) =>
-  //             prev.map((i) => (i.id === editingItem.id ? response.data : i)),
-  //           )
-  //         }
-
-  //         showToast('Item updated successfully', 'success')
-  //         setShowItemModal(false)
-  //         setEditingItem(undefined)
-  //       }
-  //     } else {
-  //       const response = await itemService.create({
-  //         name: data.name!,
-  //         description: data.description,
-  //         price: data.price!,
-  //         categoryId: data.categoryId!,
-  //         imageUrl: data.imageUrl || null,
-  //         isVeg: data.isVeg!,
-  //         isAvailable: data.isAvailable!,
-  //         sortOrder:
-  //           data.sortOrder ||
-  //           (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
-  //       })
-
-  //       if (response.success) {
-  //         setItemsByCategory((prev) => ({
-  //           ...prev,
-  //           [data.categoryId!]: {
-  //             ...prev[data.categoryId!],
-  //             items: [...(prev[data.categoryId!]?.items || []), response.data],
-  //             total: (prev[data.categoryId!]?.total || 0) + 1,
-  //           },
-  //         }))
-
-  //         setCategories((prev) =>
-  //           prev.map((c) =>
-  //             c.id === data.categoryId
-  //               ? { ...c, itemCount: (c.itemCount || 0) + 1 }
-  //               : c,
-  //           ),
-  //         )
-
-  //         showToast('Item added successfully', 'success')
-  //         setShowItemModal(false)
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Item save error:', error)
-
-  //     if (error.code === 'VALIDATION_ERROR' && error.details) {
-  //       setValidationErrors(error.details)
-  //       showToast('Please fix the validation errors', 'error')
-  //       return
-  //     }
-
-  //     showToast(error.message || 'Failed to save item', 'error')
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
   const handleSaveItem = async (data: Partial<Item>) => {
-  setIsLoading(true)
-  setValidationErrors([])
-
-  try {
-    if (editingItem) {
-      const response = await itemService.update(editingItem.id, {
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        categoryId: data.categoryId,
-        imageUrl: data.imageUrl,
-        isVeg: data.isVeg,
-        isAvailable: data.isAvailable,
-        sortOrder: data.sortOrder,
-      })
-
-      if (response.success) {
-        const oldCategoryId = editingItem.categoryId
-        const newCategoryId = response.data.categoryId
-
-   
-        if (oldCategoryId !== newCategoryId) {
-   
-          if (itemsByCategory[oldCategoryId]) {
-            setItemsByCategory((prev) => ({
-              ...prev,
-              [oldCategoryId]: {
-                ...prev[oldCategoryId],
-                items: prev[oldCategoryId].items.filter((i) => i.id !== editingItem.id),
-                total: prev[oldCategoryId].total - 1,
-              },
-            }))
-
-            // Update old category's item count
-            setCategories((prev) =>
-              prev.map((c) =>
-                c.id === oldCategoryId
-                  ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
-                  : c,
-              ),
-            )
-          }
-
-          // Add to new category
-          if (itemsByCategory[newCategoryId]) {
-            setItemsByCategory((prev) => ({
-              ...prev,
-              [newCategoryId]: {
-                ...prev[newCategoryId],
-                items: [...prev[newCategoryId].items, response.data],
-                total: prev[newCategoryId].total + 1,
-              },
-            }))
-
-            // Update new category's item count
-            setCategories((prev) =>
-              prev.map((c) =>
-                c.id === newCategoryId
-                  ? { ...c, itemCount: (c.itemCount || 0) + 1 }
-                  : c,
-              ),
-            )
-          }
-        } else {
-          // ✅ Same category - just update the item
-          if (itemsByCategory[oldCategoryId]) {
-            setItemsByCategory((prev) => ({
-              ...prev,
-              [oldCategoryId]: {
-                ...prev[oldCategoryId],
-                items: prev[oldCategoryId].items.map((i) =>
-                  i.id === editingItem.id ? response.data : i,
-                ),
-              },
-            }))
-          }
-        }
-
-        // Update search results if in search mode
-        if (isSearchMode) {
-          setSearchResults((prev) =>
-            prev.map((i) => (i.id === editingItem.id ? response.data : i)),
-          )
-        }
-
-        showToast('Item updated successfully', 'success')
-        setShowItemModal(false)
-        setEditingItem(undefined)
-      }
-    } else {
-      // CREATE logic (keep as is)
-      const response = await itemService.create({
-        name: data.name!,
-        description: data.description,
-        price: data.price!,
-        categoryId: data.categoryId!,
-        imageUrl: data.imageUrl || null,
-        isVeg: data.isVeg!,
-        isAvailable: data.isAvailable!,
-        sortOrder:
-          data.sortOrder ||
-          (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
-      })
-
-      if (response.success) {
-        setItemsByCategory((prev) => ({
-          ...prev,
-          [data.categoryId!]: {
-            ...prev[data.categoryId!],
-            items: [...(prev[data.categoryId!]?.items || []), response.data],
-            total: (prev[data.categoryId!]?.total || 0) + 1,
-          },
-        }))
-
-        setCategories((prev) =>
-          prev.map((c) =>
-            c.id === data.categoryId
-              ? { ...c, itemCount: (c.itemCount || 0) + 1 }
-              : c,
-          ),
-        )
-
-        showToast('Item added successfully', 'success')
-        setShowItemModal(false)
-      }
-    }
-  } catch (error) {
-    console.error('Item save error:', error)
-
-    if (error.code === 'VALIDATION_ERROR' && error.details) {
-      setValidationErrors(error.details)
-      showToast('Please fix the validation errors', 'error')
-      return
-    }
-
-    showToast('Failed to save item', 'error')
-  } finally {
-    setIsLoading(false)
-  }
-}
-
-  const handleDeleteItem = async (item: Item) => {
-    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
-      return
+    setIsLoading(true)
+    setValidationErrors([])
 
     try {
-      // ✅ NEW: Call API first
+      if (editingItem) {
+        const response = await itemService.update(editingItem.id, {
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          categoryId: data.categoryId,
+          imageUrl: data.imageUrl,
+          isVeg: data.isVeg,
+          isAvailable: data.isAvailable,
+          sortOrder: data.sortOrder,
+        })
+
+        if (response.success) {
+          const oldCategoryId = editingItem.categoryId
+          const newCategoryId = response.data.categoryId
+
+          if (oldCategoryId !== newCategoryId) {
+            if (itemsByCategory[oldCategoryId]) {
+              setItemsByCategory((prev) => ({
+                ...prev,
+                [oldCategoryId]: {
+                  ...prev[oldCategoryId],
+                  items: prev[oldCategoryId].items.filter(
+                    (i) => i.id !== editingItem.id,
+                  ),
+                  total: prev[oldCategoryId].total - 1,
+                },
+              }))
+              setCategories((prev) =>
+                prev.map((c) =>
+                  c.id === oldCategoryId
+                    ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
+                    : c,
+                ),
+              )
+            }
+
+            if (itemsByCategory[newCategoryId]) {
+              setItemsByCategory((prev) => ({
+                ...prev,
+                [newCategoryId]: {
+                  ...prev[newCategoryId],
+                  items: [...prev[newCategoryId].items, response.data],
+                  total: prev[newCategoryId].total + 1,
+                },
+              }))
+              setCategories((prev) =>
+                prev.map((c) =>
+                  c.id === newCategoryId
+                    ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+                    : c,
+                ),
+              )
+            }
+          } else {
+            if (itemsByCategory[oldCategoryId]) {
+              setItemsByCategory((prev) => ({
+                ...prev,
+                [oldCategoryId]: {
+                  ...prev[oldCategoryId],
+                  items: prev[oldCategoryId].items.map((i) =>
+                    i.id === editingItem.id ? response.data : i,
+                  ),
+                },
+              }))
+            }
+          }
+
+          if (isSearchMode) {
+            setSearchResults((prev) =>
+              prev.map((i) => (i.id === editingItem.id ? response.data : i)),
+            )
+          }
+
+          showToast('Item updated successfully', 'success')
+          setShowItemModal(false)
+          setEditingItem(undefined)
+        }
+      } else {
+        const response = await itemService.create({
+          name: data.name!,
+          description: data.description,
+          price: data.price!,
+          categoryId: data.categoryId!,
+          imageUrl: data.imageUrl || null,
+          isVeg: data.isVeg!,
+          isAvailable: data.isAvailable!,
+          sortOrder:
+            data.sortOrder ||
+            (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
+        })
+
+        if (response.success) {
+          setItemsByCategory((prev) => ({
+            ...prev,
+            [data.categoryId!]: {
+              ...prev[data.categoryId!],
+              items: [...(prev[data.categoryId!]?.items || []), response.data],
+              total: (prev[data.categoryId!]?.total || 0) + 1,
+            },
+          }))
+
+          setCategories((prev) =>
+            prev.map((c) =>
+              c.id === data.categoryId
+                ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+                : c,
+            ),
+          )
+
+          showToast('Item added successfully', 'success')
+          setShowItemModal(false)
+        }
+      }
+    } catch (error: any) {
+      console.error('Item save error:', error)
+
+      if (error.code === 'VALIDATION_ERROR' && error.details) {
+        setValidationErrors(error.details)
+        showToast('Please fix the validation errors', 'error')
+        return
+      }
+
+      showToast('Failed to save item', 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteItem = async (item: Item) => {
+    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`)) return
+
+    try {
       await itemService.delete(item.id)
 
-      // ✅ SUCCESS: Update local state (existing logic)
       setItemsByCategory((prev) => ({
         ...prev,
         [item.categoryId]: {
@@ -695,7 +578,6 @@ export default function MenuManagement() {
         },
       }))
 
-      // Update category item count
       setCategories((prev) =>
         prev.map((c) =>
           c.id === item.categoryId
@@ -704,60 +586,51 @@ export default function MenuManagement() {
         ),
       )
 
-      // Remove from search results if in search mode
       if (isSearchMode) {
         setSearchResults((prev) => prev.filter((i) => i.id !== item.id))
       }
 
       showToast('Item deleted successfully', 'success')
-    } catch (error) {
-      // ✅ ERROR: Show backend message
+    } catch (error: any) {
       console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
   }
 
   const handleToggleItemAvailability = async (item: Item) => {
-  try {
-    const response = await itemService.toggleAvailability(item.id)
+    try {
+      const response = await itemService.toggleAvailability(item.id)
 
-    if (response.success) {
-      console.log("Availability Toggled");
-      
-   
-      const updatedItem = { ...item, ...response.data }
-      
-      // Update in itemsByCategory if category is loaded
-      if (itemsByCategory[item.categoryId]) {
-        setItemsByCategory((prev) => ({
-          ...prev,
-          [item.categoryId]: {
-            ...prev[item.categoryId],
-            items: prev[item.categoryId].items.map((i) =>
-              i.id === item.id ? updatedItem : i,
-            ),
-          },
-        }))
-      }
+      if (response.success) {
+        const updatedItem = { ...item, ...response.data }
 
-      // Update search results if in search mode
-      if (isSearchMode) {
-        setSearchResults((prev) =>
-          prev.map((i) => (i.id === item.id ? updatedItem : i)),
+        if (itemsByCategory[item.categoryId]) {
+          setItemsByCategory((prev) => ({
+            ...prev,
+            [item.categoryId]: {
+              ...prev[item.categoryId],
+              items: prev[item.categoryId].items.map((i) =>
+                i.id === item.id ? updatedItem : i,
+              ),
+            },
+          }))
+        }
+
+        if (isSearchMode) {
+          setSearchResults((prev) =>
+            prev.map((i) => (i.id === item.id ? updatedItem : i)),
+          )
+        }
+
+        showToast(
+          item.isAvailable ? 'Item marked as unavailable' : 'Item marked as available',
+          'success',
         )
       }
-
-      showToast(
-        item.isAvailable
-          ? 'Item marked as unavailable'
-          : 'Item marked as available',
-        'success',
-      )
+    } catch (error: any) {
+      showToast(error.message || 'Failed to update item', 'error')
     }
-  } catch (error) {
-    showToast(error.message || 'Failed to update item', 'error')
   }
-}
 
   // ============================================
   // HELPERS
@@ -823,10 +696,16 @@ export default function MenuManagement() {
     return rootCategories
   }
 
+  // ── renderCategory: passes liveChildrenCount computed from live state ──
   const renderCategory = (category: Category, level: number = 0) => {
     const categoryItems = itemsByCategory[category.id]?.items || []
     const itemsPagination = itemsByCategory[category.id]
     const isExpanded = expandedCategories.has(category.id)
+
+    // Always fresh: count how many entries in categories[] have this as parent
+    const liveChildrenCount = categories.filter(
+      (c) => c.parentId === category.id,
+    ).length
 
     return (
       <div key={category.id}>
@@ -864,12 +743,11 @@ export default function MenuManagement() {
               : undefined
           }
           level={level}
+          liveChildrenCount={liveChildrenCount}
         >
           {category.children && category.children.length > 0 && isExpanded && (
             <div className="space-y-3 mt-3">
-              {category.children.map((child) =>
-                renderCategory(child, level + 1),
-              )}
+              {category.children.map((child) => renderCategory(child, level + 1))}
             </div>
           )}
         </CategoryCard>
@@ -910,6 +788,7 @@ export default function MenuManagement() {
         </button>
       </div>
 
+      {/* Search Bar */}
       <div className="bg-white rounded-lg border shadow-sm p-4">
         <div className="flex gap-2 mb-3">
           <div className="flex-1 relative">
@@ -952,6 +831,7 @@ export default function MenuManagement() {
         </div>
       </div>
 
+      {/* Search Results */}
       {isSearchMode && (
         <div className="bg-white rounded-lg border shadow-sm p-4">
           <div className="flex items-center justify-between mb-4">
@@ -976,9 +856,7 @@ export default function MenuManagement() {
             <>
               <div className="grid gap-3">
                 {searchResults.map((item) => {
-                  const category = categories.find(
-                    (c) => c.id === item.categoryId,
-                  )
+                  const category = categories.find((c) => c.id === item.categoryId)
                   return (
                     <div
                       key={item.id}
@@ -986,23 +864,19 @@ export default function MenuManagement() {
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900">
-                            {item.name}
-                          </h4>
+                          <h4 className="font-medium text-gray-900">{item.name}</h4>
                           {item.isVeg ? (
                             <span className="w-5 h-5 border-2 border-green-600 flex items-center justify-center">
-                              <span className="w-2 h-2 rounded-full bg-green-600"></span>
+                              <span className="w-2 h-2 rounded-full bg-green-600" />
                             </span>
                           ) : (
                             <span className="w-5 h-5 border-2 border-red-600 flex items-center justify-center">
-                              <span className="w-2 h-2 rounded-full bg-red-600"></span>
+                              <span className="w-2 h-2 rounded-full bg-red-600" />
                             </span>
                           )}
                         </div>
                         {item.description && (
-                          <p className="text-sm text-gray-600 mb-1">
-                            {item.description}
-                          </p>
+                          <p className="text-sm text-gray-600 mb-1">{item.description}</p>
                         )}
                         <p className="text-xs text-gray-500">
                           {category?.name || 'Unknown Category'}
@@ -1049,6 +923,7 @@ export default function MenuManagement() {
         </div>
       )}
 
+      {/* Category Tree */}
       {!isSearchMode && (
         <>
           {categoryTree.length === 0 ? (
@@ -1081,9 +956,7 @@ export default function MenuManagement() {
                   onLoadMore={() => loadCategories(categoryPagination.page + 1)}
                   hasMore={categoryPagination.hasMore}
                   isLoading={categoryPagination.isLoading}
-                  currentCount={
-                    categories.filter((c) => c.parentId === null).length
-                  }
+                  currentCount={categories.filter((c) => c.parentId === null).length}
                   totalCount={categoryPagination.total}
                   itemName="categories"
                 />
