@@ -10,6 +10,7 @@ type Restaurant = {
   id: number
   name: string
   contact: string
+  qrAddress : string
   email?: string
   address?: string
   logo?: string
