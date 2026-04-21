@@ -789,6 +789,13 @@ export default function MenuManagement() {
             Manage your categories and menu items
           </p>
         </div>
+        <button
+          onClick={() => handleOpenCategoryModal()}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-sm"
+        >
+          <Plus className="w-5 h-5" />
+          Add Category
+        </button>
       </div>
 
       {/* Search Bar */}
