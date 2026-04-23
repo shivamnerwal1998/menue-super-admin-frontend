@@ -1,6 +1,6 @@
 // src/pages/Admin/menu/index.tsx
 import { useState, useEffect } from 'react'
-import { Plus, Search, X } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import {
   Category,
   Item,
@@ -14,8 +14,24 @@ import ItemFormModal from '../../../components/admin/menue/ItemFormModal'
 import LoadMoreButton from '../../../components/admin/common/LoadMoreButton'
 import { categoryService, itemService } from '../../../utils/menuService'
 import theme, { getThemeClasses } from '../../../configs/theme.js'
+import { useSearch } from '../../../state/SearchContext'
 
 export default function MenuManagement() {
+
+  // ── Search state lives in context ────────────────────────────────────────
+  const {
+    isSearchMode,
+    searchResults,
+    searchPagination,
+    searchQuery,
+    searchType,
+    executeSearch,
+    clearSearch,
+    updateSearchResult,
+    removeSearchResult,
+  } = useSearch()
+
+  // ── Local state ──────────────────────────────────────────────────────────
   const [categories, setCategories] = useState<Category[]>([])
   const [categoryPagination, setCategoryPagination] = useState({
     page: 1,
@@ -39,18 +55,6 @@ export default function MenuManagement() {
     >
   >({})
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchItems, setSearchItems] = useState(true)
-  const [searchResults, setSearchResults] = useState<Item[]>([])
-  const [searchPagination, setSearchPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    hasMore: false,
-    isLoading: false,
-  })
-  const [isSearchMode, setIsSearchMode] = useState(false)
-
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [showItemModal, setShowItemModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | undefined>()
@@ -60,22 +64,16 @@ export default function MenuManagement() {
 
   const [toast, setToast] = useState<ToastType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    [],
-  )
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
-    new Set(),
-  )
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
 
-  // ============================================
-  // INITIAL LOAD
-  // ============================================
+  // ── Initial load ─────────────────────────────────────────────────────────
   useEffect(() => {
     loadCategories()
   }, [])
 
   const loadCategories = async (page = 1) => {
-    setCategoryPagination((prev) => ({ ...prev, isLoading: true }))
+    setCategoryPagination(prev => ({ ...prev, isLoading: true }))
     try {
       const response = await categoryService.getAll({
         page,
@@ -91,24 +89,19 @@ export default function MenuManagement() {
         childrenCount: cat._count?.children || 0,
       }))
 
-      setCategories((prev) =>
-        page === 1 ? newCategories : [...prev, ...newCategories],
-      )
-
-      const shouldLoadMore =
-        response.total > 10 && response.page * response.limit < response.total
+      setCategories(prev => page === 1 ? newCategories : [...prev, ...newCategories])
 
       setCategoryPagination({
         page: response.page,
         limit: response.limit,
         total: response.total,
-        hasMore: shouldLoadMore,
+        hasMore: response.total > 10 && response.page * response.limit < response.total,
         isLoading: false,
       })
     } catch (error) {
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
-      setCategoryPagination((prev) => ({ ...prev, isLoading: false }))
+      setCategoryPagination(prev => ({ ...prev, isLoading: false }))
     }
   }
 
@@ -128,11 +121,11 @@ export default function MenuManagement() {
         childrenCount: cat._count?.children || 0,
       }))
 
-      setCategories((prev) => {
-        const parentIndex = prev.findIndex((c) => c.id === parentId)
+      setCategories(prev => {
+        const parentIndex = prev.findIndex(c => c.id === parentId)
         if (parentIndex === -1) return prev
-        const newCategories = [...prev]
-        const filtered = newCategories.filter((c) => c.parentId !== parentId)
+        const next = [...prev]
+        const filtered = next.filter(c => c.parentId !== parentId)
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
@@ -143,16 +136,10 @@ export default function MenuManagement() {
   }
 
   const loadItemsForCategory = async (categoryId: number, page = 1) => {
-    setItemsByCategory((prev) => ({
+    setItemsByCategory(prev => ({
       ...prev,
       [categoryId]: {
-        ...(prev[categoryId] || {
-          items: [],
-          page: 1,
-          limit: 10,
-          total: 0,
-          hasMore: false,
-        }),
+        ...(prev[categoryId] || { items: [], page: 1, limit: 10, total: 0, hasMore: false }),
         isLoading: true,
       },
     }))
@@ -166,13 +153,10 @@ export default function MenuManagement() {
         order: 'asc',
       })
 
-      setItemsByCategory((prev) => ({
+      setItemsByCategory(prev => ({
         ...prev,
         [categoryId]: {
-          items:
-            page === 1
-              ? response.data
-              : [...(prev[categoryId]?.items || []), ...response.data],
+          items: page === 1 ? response.data : [...(prev[categoryId]?.items || []), ...response.data],
           page: response.page,
           limit: response.limit,
           total: response.total,
@@ -183,98 +167,36 @@ export default function MenuManagement() {
     } catch (error) {
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
-      setItemsByCategory((prev) => ({
+      setItemsByCategory(prev => ({
         ...prev,
         [categoryId]: {
-          ...(prev[categoryId] || {
-            items: [],
-            page: 1,
-            limit: 10,
-            total: 0,
-            hasMore: false,
-          }),
+          ...(prev[categoryId] || { items: [], page: 1, limit: 10, total: 0, hasMore: false }),
           isLoading: false,
         },
       }))
     }
   }
 
-  // ============================================
-  // SEARCH
-  // ============================================
-  const handleSearch = async (page = 1) => {
-    if (!searchQuery.trim()) {
-      setIsSearchMode(false)
-      setSearchResults([])
-      return
-    }
-
-    setIsSearchMode(true)
-    setSearchPagination((prev) => ({ ...prev, isLoading: true }))
-
-    try {
-      if (searchItems) {
-        const response = await itemService.getAll({
-          search: searchQuery,
-          page,
-          limit: 20,
-          sortBy: 'name',
-          order: 'asc',
-        })
-
-        setSearchResults(
-          page === 1 ? response.data : [...searchResults, ...response.data],
-        )
-        setSearchPagination({
-          page: response.page,
-          limit: response.limit,
-          total: response.total,
-          hasMore: response.page * response.limit < response.total,
-          isLoading: false,
-        })
-      }
-    } catch (error) {
-      console.error('Search error:', error)
-      showToast(error.message || 'Search failed', 'error')
-      setSearchPagination((prev) => ({ ...prev, isLoading: false }))
-    }
-  }
-
-  const handleClearSearch = () => {
-    setSearchQuery('')
-    setIsSearchMode(false)
-    setSearchResults([])
-    setSearchPagination({
-      page: 1,
-      limit: 20,
-      total: 0,
-      hasMore: false,
-      isLoading: false,
-    })
-  }
-
-  // ============================================
-  // CATEGORY EXPANSION
-  // ============================================
+  // ── Category expansion ───────────────────────────────────────────────────
   const handleToggleCategory = (categoryId: number) => {
     const isExpanded = expandedCategories.has(categoryId)
 
     if (isExpanded) {
-      setExpandedCategories((prev) => {
+      setExpandedCategories(prev => {
         const next = new Set(prev)
         next.delete(categoryId)
         return next
       })
     } else {
-      setExpandedCategories((prev) => new Set(prev).add(categoryId))
+      setExpandedCategories(prev => new Set(prev).add(categoryId))
 
       if (!itemsByCategory[categoryId]) {
         loadItemsForCategory(categoryId)
       }
 
-      const category = categories.find((c) => c.id === categoryId)
+      const category = categories.find(c => c.id === categoryId)
       if (category && (category as any).childrenCount > 0) {
-        const hasChildren = categories.some((c) => c.parentId === categoryId)
+        const hasChildren = categories.some(c => c.parentId === categoryId)
         if (!hasChildren) {
           loadCategoryChildren(categoryId)
         }
@@ -282,9 +204,7 @@ export default function MenuManagement() {
     }
   }
 
-  // ============================================
-  // CATEGORY CRUD
-  // ============================================
+  // ── Category CRUD ────────────────────────────────────────────────────────
   const handleSaveCategory = async (data: Partial<Category>) => {
     setIsLoading(true)
     setValidationErrors([])
@@ -300,14 +220,10 @@ export default function MenuManagement() {
         })
 
         if (response.success) {
-          setCategories((cats) =>
-            cats.map((c) =>
+          setCategories(cats =>
+            cats.map(c =>
               c.id === editingCategory.id
-                ? {
-                    ...response.data,
-                    itemCount: c.itemCount,
-                    childrenCount: (c as any).childrenCount,
-                  }
+                ? { ...response.data, itemCount: c.itemCount, childrenCount: (c as any).childrenCount }
                 : c,
             ),
           )
@@ -316,7 +232,7 @@ export default function MenuManagement() {
           setEditingCategory(undefined)
 
           if (isSearchMode) {
-            handleSearch(1)
+            executeSearch(searchQuery, searchType, 1)
           }
         }
       } else {
@@ -329,31 +245,18 @@ export default function MenuManagement() {
         })
 
         if (response.success) {
-          const newCategory = {
-            ...response.data,
-            itemCount: 0,
-            childrenCount: 0,
-          }
+          const newCategory = { ...response.data, itemCount: 0, childrenCount: 0 }
 
           if (newCategory.parentId) {
-            setExpandedCategories((prev) =>
-              new Set(prev).add(newCategory.parentId!),
-            )
+            setExpandedCategories(prev => new Set(prev).add(newCategory.parentId!))
             await loadCategoryChildren(newCategory.parentId)
           } else {
-            setCategories((prev) => [...prev, newCategory])
+            setCategories(prev => [...prev, newCategory])
           }
 
-          setItemsByCategory((prev) => ({
+          setItemsByCategory(prev => ({
             ...prev,
-            [response.data.id]: {
-              items: [],
-              page: 1,
-              limit: 2,
-              total: 0,
-              hasMore: false,
-              isLoading: false,
-            },
+            [response.data.id]: { items: [], page: 1, limit: 2, total: 0, hasMore: false, isLoading: false },
           }))
 
           showToast('Category created successfully', 'success')
@@ -363,13 +266,11 @@ export default function MenuManagement() {
       }
     } catch (error) {
       console.error('Category save error:', error)
-
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
         showToast('Please fix the validation errors', 'error')
         return
       }
-
       showToast(error.message || 'Failed to save category', 'error')
     } finally {
       setIsLoading(false)
@@ -377,14 +278,12 @@ export default function MenuManagement() {
   }
 
   const handleDeleteCategory = async (category: Category) => {
-    const hasChildren = categories.some((c) => c.parentId === category.id)
+    const hasChildren = categories.some(c => c.parentId === category.id)
     const categoryItems = itemsByCategory[category.id]?.items || []
 
     let confirmMessage = `Delete "${category.name}"?`
-    if (hasChildren)
-      confirmMessage += '\n\nThis will also delete all subcategories.'
-    if (categoryItems.length > 0)
-      confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
+    if (hasChildren) confirmMessage += '\n\nThis will also delete all subcategories.'
+    if (categoryItems.length > 0) confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
     confirmMessage += '\n\nThis action cannot be undone.'
 
     if (!confirm(confirmMessage)) return
@@ -393,13 +292,13 @@ export default function MenuManagement() {
       await categoryService.delete(category.id)
 
       const deleteWithChildren = (catId: number) => {
-        const children = categories.filter((c) => c.parentId === catId)
-        children.forEach((child) => deleteWithChildren(child.id))
-        setCategories((cats) => cats.filter((c) => c.id !== catId))
-        setItemsByCategory((prev) => {
-          const newItems = { ...prev }
-          delete newItems[catId]
-          return newItems
+        const children = categories.filter(c => c.parentId === catId)
+        children.forEach(child => deleteWithChildren(child.id))
+        setCategories(cats => cats.filter(c => c.id !== catId))
+        setItemsByCategory(prev => {
+          const next = { ...prev }
+          delete next[catId]
+          return next
         })
       }
 
@@ -416,15 +315,10 @@ export default function MenuManagement() {
       const response = await categoryService.toggleActive(category.id)
 
       if (response.success) {
-        setCategories((cats) =>
-          cats.map((c) =>
-            c.id === category.id
-              ? { ...c, isActive: response.data.isActive }
-              : c,
-          ),
+        setCategories(cats =>
+          cats.map(c => c.id === category.id ? { ...c, isActive: response.data.isActive } : c),
         )
-        const status = response.data.isActive ? 'activated' : 'deactivated'
-        showToast(`Category ${status} successfully`, 'success')
+        showToast(`Category ${response.data.isActive ? 'activated' : 'deactivated'} successfully`, 'success')
       }
     } catch (error) {
       console.error('Toggle category error:', error)
@@ -432,9 +326,7 @@ export default function MenuManagement() {
     }
   }
 
-  // ============================================
-  // ITEM CRUD
-  // ============================================
+  // ── Item CRUD ────────────────────────────────────────────────────────────
   const handleSaveItem = async (data: Partial<Item>) => {
     setIsLoading(true)
     setValidationErrors([])
@@ -458,27 +350,24 @@ export default function MenuManagement() {
 
           if (oldCategoryId !== newCategoryId) {
             if (itemsByCategory[oldCategoryId]) {
-              setItemsByCategory((prev) => ({
+              setItemsByCategory(prev => ({
                 ...prev,
                 [oldCategoryId]: {
                   ...prev[oldCategoryId],
-                  items: prev[oldCategoryId].items.filter(
-                    (i) => i.id !== editingItem.id,
-                  ),
+                  items: prev[oldCategoryId].items.filter(i => i.id !== editingItem.id),
                   total: prev[oldCategoryId].total - 1,
                 },
               }))
-              setCategories((prev) =>
-                prev.map((c) =>
+              setCategories(prev =>
+                prev.map(c =>
                   c.id === oldCategoryId
                     ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
                     : c,
                 ),
               )
             }
-
             if (itemsByCategory[newCategoryId]) {
-              setItemsByCategory((prev) => ({
+              setItemsByCategory(prev => ({
                 ...prev,
                 [newCategoryId]: {
                   ...prev[newCategoryId],
@@ -486,8 +375,8 @@ export default function MenuManagement() {
                   total: prev[newCategoryId].total + 1,
                 },
               }))
-              setCategories((prev) =>
-                prev.map((c) =>
+              setCategories(prev =>
+                prev.map(c =>
                   c.id === newCategoryId
                     ? { ...c, itemCount: (c.itemCount || 0) + 1 }
                     : c,
@@ -496,23 +385,18 @@ export default function MenuManagement() {
             }
           } else {
             if (itemsByCategory[oldCategoryId]) {
-              setItemsByCategory((prev) => ({
+              setItemsByCategory(prev => ({
                 ...prev,
                 [oldCategoryId]: {
                   ...prev[oldCategoryId],
-                  items: prev[oldCategoryId].items.map((i) =>
-                    i.id === editingItem.id ? response.data : i,
-                  ),
+                  items: prev[oldCategoryId].items.map(i => i.id === editingItem.id ? response.data : i),
                 },
               }))
             }
           }
 
-          if (isSearchMode) {
-            setSearchResults((prev) =>
-              prev.map((i) => (i.id === editingItem.id ? response.data : i)),
-            )
-          }
+          // Sync search results via context
+          if (isSearchMode) updateSearchResult(response.data)
 
           showToast('Item updated successfully', 'success')
           setShowItemModal(false)
@@ -527,13 +411,11 @@ export default function MenuManagement() {
           imageUrl: data.imageUrl || null,
           isVeg: data.isVeg!,
           isAvailable: data.isAvailable!,
-          sortOrder:
-            data.sortOrder ||
-            (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
+          sortOrder: data.sortOrder || (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
         })
 
         if (response.success) {
-          setItemsByCategory((prev) => ({
+          setItemsByCategory(prev => ({
             ...prev,
             [data.categoryId!]: {
               ...prev[data.categoryId!],
@@ -541,28 +423,22 @@ export default function MenuManagement() {
               total: (prev[data.categoryId!]?.total || 0) + 1,
             },
           }))
-
-          setCategories((prev) =>
-            prev.map((c) =>
-              c.id === data.categoryId
-                ? { ...c, itemCount: (c.itemCount || 0) + 1 }
-                : c,
+          setCategories(prev =>
+            prev.map(c =>
+              c.id === data.categoryId ? { ...c, itemCount: (c.itemCount || 0) + 1 } : c,
             ),
           )
-
           showToast('Item added successfully', 'success')
           setShowItemModal(false)
         }
       }
     } catch (error) {
       console.error('Item save error:', error)
-
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
         showToast('Please fix the validation errors', 'error')
         return
       }
-
       showToast('Failed to save item', 'error')
     } finally {
       setIsLoading(false)
@@ -570,32 +446,27 @@ export default function MenuManagement() {
   }
 
   const handleDeleteItem = async (item: Item) => {
-    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
-      return
+    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`)) return
 
     try {
       await itemService.delete(item.id)
 
-      setItemsByCategory((prev) => ({
+      setItemsByCategory(prev => ({
         ...prev,
         [item.categoryId]: {
           ...prev[item.categoryId],
-          items: prev[item.categoryId].items.filter((i) => i.id !== item.id),
+          items: prev[item.categoryId].items.filter(i => i.id !== item.id),
           total: prev[item.categoryId].total - 1,
         },
       }))
-
-      setCategories((prev) =>
-        prev.map((c) =>
-          c.id === item.categoryId
-            ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
-            : c,
+      setCategories(prev =>
+        prev.map(c =>
+          c.id === item.categoryId ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) } : c,
         ),
       )
 
-      if (isSearchMode) {
-        setSearchResults((prev) => prev.filter((i) => i.id !== item.id))
-      }
+      // Sync search results via context
+      if (isSearchMode) removeSearchResult(item.id)
 
       showToast('Item deleted successfully', 'success')
     } catch (error) {
@@ -612,27 +483,20 @@ export default function MenuManagement() {
         const updatedItem = { ...item, ...response.data }
 
         if (itemsByCategory[item.categoryId]) {
-          setItemsByCategory((prev) => ({
+          setItemsByCategory(prev => ({
             ...prev,
             [item.categoryId]: {
               ...prev[item.categoryId],
-              items: prev[item.categoryId].items.map((i) =>
-                i.id === item.id ? updatedItem : i,
-              ),
+              items: prev[item.categoryId].items.map(i => i.id === item.id ? updatedItem : i),
             },
           }))
         }
 
-        if (isSearchMode) {
-          setSearchResults((prev) =>
-            prev.map((i) => (i.id === item.id ? updatedItem : i)),
-          )
-        }
+        // Sync search results via context
+        if (isSearchMode) updateSearchResult(updatedItem)
 
         showToast(
-          item.isAvailable
-            ? 'Item marked as unavailable'
-            : 'Item marked as available',
+          item.isAvailable ? 'Item marked as unavailable' : 'Item marked as available',
           'success',
         )
       }
@@ -641,9 +505,7 @@ export default function MenuManagement() {
     }
   }
 
-  // ============================================
-  // HELPERS
-  // ============================================
+  // ── Helpers ──────────────────────────────────────────────────────────────
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type })
   }
@@ -675,11 +537,8 @@ export default function MenuManagement() {
     const categoryMap = new Map<number, Category>()
     const rootCategories: Category[] = []
 
-    cats.forEach((cat) => {
-      categoryMap.set(cat.id, { ...cat, children: [] })
-    })
-
-    cats.forEach((cat) => {
+    cats.forEach(cat => categoryMap.set(cat.id, { ...cat, children: [] }))
+    cats.forEach(cat => {
       const category = categoryMap.get(cat.id)!
       if (cat.parentId === null) {
         rootCategories.push(category)
@@ -694,10 +553,8 @@ export default function MenuManagement() {
 
     const sortCategories = (categories: Category[]) => {
       categories.sort((a, b) => a.sortOrder - b.sortOrder)
-      categories.forEach((cat) => {
-        if (cat.children && cat.children.length > 0) {
-          sortCategories(cat.children)
-        }
+      categories.forEach(cat => {
+        if (cat.children?.length) sortCategories(cat.children)
       })
     }
 
@@ -705,14 +562,11 @@ export default function MenuManagement() {
     return rootCategories
   }
 
-  const renderCategory = (category: Category, level: number = 0) => {
+  const renderCategory = (category: Category, level = 0) => {
     const categoryItems = itemsByCategory[category.id]?.items || []
     const itemsPagination = itemsByCategory[category.id]
     const isExpanded = expandedCategories.has(category.id)
-
-    const liveChildrenCount = categories.filter(
-      (c) => c.parentId === category.id,
-    ).length
+    const liveChildrenCount = categories.filter(c => c.parentId === category.id).length
 
     return (
       <div key={category.id}>
@@ -726,17 +580,14 @@ export default function MenuManagement() {
           onToggleActive={() => handleToggleCategoryActive(category)}
           onAddItem={() => handleOpenItemModal(undefined, category.id)}
           onAddSubcategory={
-            level < 2
-              ? () => handleOpenCategoryModal(undefined, category.id)
-              : undefined
+            level < 2 ? () => handleOpenCategoryModal(undefined, category.id) : undefined
           }
           onEditItem={(item) => handleOpenItemModal(item)}
           onDeleteItem={handleDeleteItem}
           onToggleItemAvailability={handleToggleItemAvailability}
           onLoadMoreItems={
             itemsPagination?.hasMore
-              ? () =>
-                  loadItemsForCategory(category.id, itemsPagination.page + 1)
+              ? () => loadItemsForCategory(category.id, itemsPagination.page + 1)
               : undefined
           }
           itemsPagination={
@@ -752,13 +603,11 @@ export default function MenuManagement() {
           level={level}
           liveChildrenCount={liveChildrenCount}
         >
-          {category.children && category.children.length > 0 && isExpanded && (
+          {category.children?.length && isExpanded ? (
             <div className="space-y-3 mt-3">
-              {category.children.map((child) =>
-                renderCategory(child, level + 1),
-              )}
+              {category.children.map(child => renderCategory(child, level + 1))}
             </div>
-          )}
+          ) : null}
         </CategoryCard>
       </div>
     )
@@ -766,29 +615,23 @@ export default function MenuManagement() {
 
   const categoryTree = buildCategoryTree(categories)
 
-  // ============================================
-  // RENDER
-  // ============================================
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1
-            className={`text-2xl sm:text-3xl font-bold ${theme.secondary.text}`}
-          >
+          <h1 className={`text-2xl sm:text-3xl font-bold ${theme.secondary.text}`}>
             Menu Management
           </h1>
           <p className={`${theme.secondary.textMuted} mt-1`}>
-            Manage your categories and menu items
+            {isSearchMode
+              ? `Showing ${searchPagination.total} result${searchPagination.total !== 1 ? 's' : ''} for "${searchQuery}"`
+              : 'Manage your categories and menu items'}
           </p>
         </div>
         <button
@@ -800,54 +643,7 @@ export default function MenuManagement() {
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className={getThemeClasses.searchBar()}>
-        <div className="flex gap-2 mb-3">
-          <div className="flex-1 relative">
-            <Search
-              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${theme.secondary.textSubtle}`}
-            />
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch(1)}
-              className={`w-full pl-10 pr-4 py-2 ${getThemeClasses.input()}`}
-            />
-          </div>
-          <button
-            onClick={() => handleSearch(1)}
-            disabled={!searchQuery.trim()}
-            className={`px-6 py-2 ${getThemeClasses.buttonPrimary()} disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            Search
-          </button>
-          {isSearchMode && (
-            <button
-              onClick={handleClearSearch}
-              className={`px-4 py-2 ${theme.secondary.bgMuted} ${theme.secondary.text} rounded-lg hover:${theme.secondary.bgHover} transition font-medium`}
-            >
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-4">
-          <label
-            className={`flex items-center gap-2 text-sm ${theme.secondary.text} cursor-pointer`}
-          >
-            <input
-              type="checkbox"
-              checked={searchItems}
-              onChange={(e) => setSearchItems(e.target.checked)}
-              className={`rounded border-gray-300 ${theme.accent.textDark} focus:ring-indigo-500`}
-            />
-            Search Items
-          </label>
-        </div>
-      </div>
-
-      {/* Search Results */}
+      {/* ── Search Results (fed from header search via context) ── */}
       {isSearchMode && (
         <div className={getThemeClasses.searchBar()}>
           <div className="flex items-center justify-between mb-4">
@@ -855,7 +651,7 @@ export default function MenuManagement() {
               Search Results ({searchPagination.total})
             </h2>
             <button
-              onClick={handleClearSearch}
+              onClick={clearSearch}
               className={`text-sm ${theme.accent.textDark} hover:${theme.accent.text} font-medium`}
             >
               ← Back to Categories
@@ -863,9 +659,7 @@ export default function MenuManagement() {
           </div>
 
           {searchPagination.isLoading && searchResults.length === 0 ? (
-            <div className={`text-center py-8 ${theme.secondary.textMuted}`}>
-              Loading...
-            </div>
+            <div className={`text-center py-8 ${theme.secondary.textMuted}`}>Loading...</div>
           ) : searchResults.length === 0 ? (
             <div className={`text-center py-8 ${theme.secondary.textMuted}`}>
               No items found for "{searchQuery}"
@@ -874,33 +668,27 @@ export default function MenuManagement() {
             <>
               <div className="grid gap-3">
                 {searchResults.map((item) => {
-                  const category = categories.find(
-                    (c) => c.id === item.categoryId,
-                  )
+                  const category = categories.find(c => c.id === item.categoryId)
                   return (
                     <div
                       key={item.id}
                       className={`flex items-center justify-between p-4 border ${theme.secondary.border} rounded-lg hover:border-indigo-300 transition`}
                     >
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-medium ${theme.secondary.text}`}>
-                            {item.name}
-                          </h4>
+                          <h4 className={`font-medium ${theme.secondary.text} truncate`}>{item.name}</h4>
                           {item.isVeg ? (
-                            <span className="w-5 h-5 border-2 border-green-600 flex items-center justify-center">
+                            <span className="w-5 h-5 flex-shrink-0 border-2 border-green-600 flex items-center justify-center">
                               <span className="w-2 h-2 rounded-full bg-green-600" />
                             </span>
                           ) : (
-                            <span className="w-5 h-5 border-2 border-red-600 flex items-center justify-center">
+                            <span className="w-5 h-5 flex-shrink-0 border-2 border-red-600 flex items-center justify-center">
                               <span className="w-2 h-2 rounded-full bg-red-600" />
                             </span>
                           )}
                         </div>
                         {item.description && (
-                          <p
-                            className={`text-sm ${theme.secondary.textMuted} mb-1`}
-                          >
+                          <p className={`text-sm ${theme.secondary.textMuted} mb-1 truncate`}>
                             {item.description}
                           </p>
                         )}
@@ -908,15 +696,14 @@ export default function MenuManagement() {
                           {category?.name || 'Unknown Category'}
                         </p>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`text-lg font-semibold ${theme.secondary.text}`}
-                        >
+
+                      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-3">
+                        <span className={`text-base sm:text-lg font-semibold ${theme.secondary.text}`}>
                           ₹{(item.price / 100).toFixed(2)}
                         </span>
                         <button
                           onClick={() => handleToggleItemAvailability(item)}
-                          className={`px-3 py-1 rounded text-xs font-medium ${
+                          className={`px-2 sm:px-3 py-1 rounded text-xs font-medium ${
                             item.isAvailable
                               ? `${theme.status.success.bg} ${theme.status.success.text}`
                               : `${theme.status.error.bg} ${theme.status.error.text}`
@@ -926,7 +713,7 @@ export default function MenuManagement() {
                         </button>
                         <button
                           onClick={() => handleOpenItemModal(item)}
-                          className={`px-3 py-1 ${theme.accent.bgLight} ${theme.accent.textDark} rounded text-sm font-medium hover:${theme.accent.bgLightHover} transition`}
+                          className={`px-2 sm:px-3 py-1 ${theme.accent.bgLight} ${theme.accent.textDark} rounded text-sm font-medium hover:${theme.accent.bgLightHover} transition`}
                         >
                           Edit
                         </button>
@@ -938,7 +725,7 @@ export default function MenuManagement() {
 
               {searchPagination.hasMore && (
                 <LoadMoreButton
-                  onLoadMore={() => handleSearch(searchPagination.page + 1)}
+                  onLoadMore={() => executeSearch(searchQuery, searchType, searchPagination.page + 1)}
                   hasMore={searchPagination.hasMore}
                   isLoading={searchPagination.isLoading}
                   currentCount={searchResults.length}
@@ -951,7 +738,7 @@ export default function MenuManagement() {
         </div>
       )}
 
-      {/* Category Tree */}
+      {/* ── Category Tree ── */}
       {!isSearchMode && (
         <>
           {categoryTree.length === 0 ? (
@@ -963,9 +750,7 @@ export default function MenuManagement() {
               >
                 <Plus className={`w-8 h-8 ${theme.secondary.textSubtle}`} />
               </div>
-              <h3
-                className={`text-lg font-medium ${theme.secondary.text} mb-2`}
-              >
+              <h3 className={`text-lg font-medium ${theme.secondary.text} mb-2`}>
                 No categories yet
               </h3>
               <p className={`${theme.secondary.textMuted} mb-4`}>
@@ -982,7 +767,7 @@ export default function MenuManagement() {
           ) : (
             <>
               <div className="space-y-4">
-                {categoryTree.map((category) => renderCategory(category, 0))}
+                {categoryTree.map(category => renderCategory(category, 0))}
               </div>
 
               {categoryPagination.hasMore && (
@@ -990,9 +775,7 @@ export default function MenuManagement() {
                   onLoadMore={() => loadCategories(categoryPagination.page + 1)}
                   hasMore={categoryPagination.hasMore}
                   isLoading={categoryPagination.isLoading}
-                  currentCount={
-                    categories.filter((c) => c.parentId === null).length
-                  }
+                  currentCount={categories.filter(c => c.parentId === null).length}
                   totalCount={categoryPagination.total}
                   itemName="categories"
                 />
