@@ -1,6 +1,6 @@
-// src/components/common/Toast.tsx
 import { useEffect } from 'react'
 import { CheckCircle, AlertCircle, X } from 'lucide-react'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 interface ToastProps {
   message: string
@@ -14,22 +14,30 @@ export default function Toast({ message, type, onClose }: ToastProps) {
     return () => clearTimeout(timer)
   }, [onClose])
 
+  const isSuccess = type === 'success'
+
   return (
     <div
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
-        type === 'success'
-          ? 'bg-green-50 border border-green-200'
-          : 'bg-red-50 border border-red-200'
+        isSuccess
+          ? getThemeClasses.toastSuccess()
+          : getThemeClasses.toastError()
       }`}
     >
-      {type === 'success' ? (
-        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+      {isSuccess ? (
+        <CheckCircle
+          className={`w-5 h-5 ${theme.status.success.icon} flex-shrink-0`}
+        />
       ) : (
-        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+        <AlertCircle
+          className={`w-5 h-5 ${theme.status.error.icon} flex-shrink-0`}
+        />
       )}
       <span
         className={`text-sm font-medium ${
-          type === 'success' ? 'text-green-800' : 'text-red-800'
+          isSuccess
+            ? theme.status.success.textDark
+            : theme.status.error.textDark
         }`}
       >
         {message}
@@ -37,7 +45,7 @@ export default function Toast({ message, type, onClose }: ToastProps) {
       <button onClick={onClose} className="ml-2">
         <X
           className={`w-4 h-4 ${
-            type === 'success' ? 'text-green-600' : 'text-red-600'
+            isSuccess ? theme.status.success.icon : theme.status.error.icon
           }`}
         />
       </button>

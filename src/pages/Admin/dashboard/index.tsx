@@ -5,6 +5,7 @@ import { itemService, StatsData, RestaurantData } from '../../../utils/menuServi
 import { ToastType } from '../../../types/menue'
 import Toast from '../../../components/admin/common/Toast'
 import QRCode from 'qrcode'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -58,7 +59,6 @@ export default function AdminDashboard() {
     }
   }, [showQRModal, restaurant])
 
-  // Lock body scroll when modal open so overlay truly covers everything
   useEffect(() => {
     if (showQRModal) {
       document.body.style.overflow = 'hidden'
@@ -117,15 +117,15 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* ── Welcome Header — softened gradient ── */}
-      <div className="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-400 rounded-xl p-6 text-white shadow-md">
+      {/* ── Welcome Banner ── */}
+      <div className={getThemeClasses.heroBanner()}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold mb-1">
               {restaurant ? restaurant.name : (user?.name || 'Admin')} 👋
             </h1>
             {restaurant ? (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-blue-50 text-sm">
+              <div className={`flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 ${theme.hero.textMuted} text-sm`}>
                 {restaurant.contact && (
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
                 )}
               </div>
             ) : (
-              <p className="text-blue-50 text-sm">Manage your restaurant menu and keep it up to date</p>
+              <p className={`${theme.hero.textMuted} text-sm`}>Manage your restaurant menu and keep it up to date</p>
             )}
           </div>
 
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
           <button
             onClick={() => setShowQRModal(true)}
             title="View QR Code"
-            className="flex-shrink-0 flex flex-col items-center gap-1 bg-white/20 hover:bg-white/30 text-white rounded-xl px-4 py-3 transition border border-white/25"
+            className={`flex-shrink-0 flex flex-col items-center gap-1 ${theme.hero.buttonBg} ${theme.hero.buttonBgHover} ${theme.hero.text} rounded-xl px-4 py-3 transition border ${theme.hero.buttonBorder}`}
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth={2} />
@@ -167,48 +167,50 @@ export default function AdminDashboard() {
 
       {/* ── Stats Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+        {/* Categories */}
+        <div className={getThemeClasses.statCard()}>
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`p-3 ${theme.iconBg.purple} rounded-lg`}>
+              <svg className={`w-6 h-6 ${theme.iconBg.purpleText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
               </svg>
             </div>
           </div>
-          <p className="text-sm text-gray-600 font-medium">Categories</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalCategories}</p>
+          <p className={`text-sm ${theme.secondary.textMuted} font-medium`}>Categories</p>
+          <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>{stats.totalCategories}</p>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+        {/* Total Items */}
+        <div className={getThemeClasses.statCard()}>
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`p-3 ${theme.iconBg.blue} rounded-lg`}>
+              <svg className={`w-6 h-6 ${theme.iconBg.blueText}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
           </div>
-          <p className="text-sm text-gray-600 font-medium">Total Items</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{stats.totalItems}</p>
+          <p className={`text-sm ${theme.secondary.textMuted} font-medium`}>Total Items</p>
+          <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>{stats.totalItems}</p>
         </div>
       </div>
 
       {/* ── Menu Management CTA ── */}
-      <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+      <div className={`${theme.status.success.bgLight} border ${theme.status.success.border} rounded-xl p-6`}>
         <div className="flex items-start gap-3">
-          <svg className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-6 h-6 ${theme.status.success.icon} flex-shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h3 className="font-semibold text-green-900 mb-1">Menu Management is Ready! 🎉</h3>
-            <p className="text-sm text-green-800 mb-3">
+            <h3 className={`font-semibold ${theme.status.success.textHeading} mb-1`}>Menu Management is Ready! 🎉</h3>
+            <p className={`text-sm ${theme.status.success.textDark} mb-3`}>
               Your menu management system is fully set up. Click below to start customizing your restaurant's menu.
             </p>
             <button
               onClick={() => navigate('/admin/menu')}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition font-medium"
+              className={`px-4 py-2 ${theme.status.success.button} ${theme.status.success.buttonHover} ${theme.primary.text} text-sm rounded-lg transition font-medium`}
             >
               Go to Menu Management
             </button>
@@ -219,15 +221,13 @@ export default function AdminDashboard() {
       {/* ── QR Modal ── */}
       {showQRModal && (
         <div
-          // Use fixed + inset-0 ensures it covers the full viewport including any sticky headers/sidebars
-          // z-[9999] beats any sidebar or topbar z-index
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setShowQRModal(false) }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 flex flex-col items-center gap-6 relative">
+          <div className={`${theme.secondary.bg} rounded-2xl ${theme.shadow['2xl']} w-full max-w-sm p-8 flex flex-col items-center gap-6 relative`}>
             <button
               onClick={() => setShowQRModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+              className={`absolute top-4 right-4 ${theme.secondary.textSubtle} hover:${theme.secondary.textMuted} transition`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -235,23 +235,23 @@ export default function AdminDashboard() {
             </button>
 
             <div className="text-center">
-              <h2 className="text-xl font-bold text-gray-900">{restaurant?.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">Scan to view menu</p>
+              <h2 className={`text-xl font-bold ${theme.secondary.text}`}>{restaurant?.name}</h2>
+              <p className={`text-sm ${theme.secondary.textMuted} mt-1`}>Scan to view menu</p>
             </div>
 
-            <div className="rounded-xl overflow-hidden border-4 border-gray-100 shadow-inner">
+            <div className={`rounded-xl overflow-hidden border-4 ${theme.secondary.bgMuted} shadow-inner`}>
               <canvas ref={qrCanvasRef} />
             </div>
 
             {restaurant?.qrAddress && (
-              <p className="text-xs text-blue-500 break-all text-center max-w-[240px]">
+              <p className={`text-xs ${theme.accent.text} break-all text-center max-w-[240px]`}>
                 {restaurant.qrAddress}
               </p>
             )}
 
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition w-full justify-center"
+              className={`flex items-center gap-2 px-5 py-2.5 ${theme.accent.bg} hover:${theme.accent.bgHover} ${theme.primary.text} text-sm font-medium rounded-lg transition w-full justify-center`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

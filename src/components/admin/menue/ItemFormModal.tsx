@@ -1,7 +1,9 @@
+// src/components/admin/menue/ItemFormModal.tsx
 import { useState, useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
 import Modal from '../common/Modal'
 import { Item, Category, ValidationError } from '../../../types/menue'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 interface ItemFormModalProps {
   isOpen: boolean
@@ -91,9 +93,13 @@ export default function ItemFormModal({
         <div className="space-y-4">
           {/* Sample warning */}
           {isSample && (
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-              <span className="text-sm text-orange-700">
+            <div
+              className={`p-3 ${theme.status.warning.bgLight} border ${theme.status.warning.border} rounded-lg flex items-start gap-2`}
+            >
+              <AlertCircle
+                className={`w-5 h-5 ${theme.status.warning.icon} flex-shrink-0 mt-0.5`}
+              />
+              <span className={`text-sm ${theme.status.warning.textDark}`}>
                 This is a sample item. Remove the "Sample " prefix to make it
                 your own.
               </span>
@@ -102,7 +108,9 @@ export default function ItemFormModal({
 
           {/* Item Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Item Name *
             </label>
             <input
@@ -111,15 +119,19 @@ export default function ItemFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
-                getFieldError('name') ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 ${
+                getFieldError('name')
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               placeholder="e.g., Paneer Tikka"
               maxLength={200}
               disabled={isLoading}
             />
             {getFieldError('name') && (
-              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <p
+                className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+              >
                 <AlertCircle className="w-3 h-3" />
                 {getFieldError('name')}
               </p>
@@ -128,7 +140,9 @@ export default function ItemFormModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Description (Optional)
             </label>
             <textarea
@@ -136,10 +150,10 @@ export default function ItemFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
+              className={`w-full px-3 py-2 ${
                 getFieldError('description')
-                  ? 'border-red-500'
-                  : 'border-gray-300'
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               placeholder="Brief description of the dish"
               rows={3}
@@ -147,11 +161,13 @@ export default function ItemFormModal({
               disabled={isLoading}
             />
             <div className="flex justify-between items-center mt-1">
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${theme.secondary.textMuted}`}>
                 {formData.description.length}/1000 characters
               </p>
               {getFieldError('description') && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
+                <p
+                  className={`text-xs ${theme.status.error.icon} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-3 h-3" />
                   {getFieldError('description')}
                 </p>
@@ -162,19 +178,19 @@ export default function ItemFormModal({
           {/* Price & Category */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+              >
                 Price (₹) *
               </label>
               <input
                 type="number"
                 value={formData.price}
                 onChange={(e) => {
-                  // Only allow whole numbers - remove decimal points
                   const value = e.target.value.replace(/\./g, '')
                   setFormData({ ...formData, price: value })
                 }}
                 onKeyDown={(e) => {
-                  // Prevent decimal point and minus sign
                   if (
                     e.key === '.' ||
                     e.key === '-' ||
@@ -184,8 +200,10 @@ export default function ItemFormModal({
                     e.preventDefault()
                   }
                 }}
-                className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
-                  getFieldError('price') ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-3 py-2 ${
+                  getFieldError('price')
+                    ? getThemeClasses.inputError()
+                    : getThemeClasses.input()
                 }`}
                 placeholder="180"
                 min="1"
@@ -193,18 +211,23 @@ export default function ItemFormModal({
                 disabled={isLoading}
               />
               {getFieldError('price') && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <p
+                  className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+                >
                   <AlertCircle className="w-3 h-3" />
                   {getFieldError('price')}
                 </p>
               )}
-              <p className="text-xs text-gray-500 mt-1">
+              <p className={`text-xs ${theme.secondary.textMuted} mt-1`}>
                 Enter whole number only (no decimals)
               </p>
             </div>
 
+            {/* Category selector (hidden) */}
             <div className="hidden">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+              >
                 Category *
               </label>
               <select
@@ -215,10 +238,10 @@ export default function ItemFormModal({
                     categoryId: parseInt(e.target.value),
                   })
                 }
-                className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
+                className={`w-full px-3 py-2 ${
                   getFieldError('categoryId')
-                    ? 'border-red-500'
-                    : 'border-gray-300'
+                    ? getThemeClasses.inputError()
+                    : getThemeClasses.input()
                 }`}
                 disabled={isLoading}
               >
@@ -229,7 +252,9 @@ export default function ItemFormModal({
                 ))}
               </select>
               {getFieldError('categoryId') && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <p
+                  className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+                >
                   <AlertCircle className="w-3 h-3" />
                   {getFieldError('categoryId')}
                 </p>
@@ -237,9 +262,11 @@ export default function ItemFormModal({
             </div>
           </div>
 
-          {/* Image URL */}
+          {/* Image URL (hidden) */}
           <div className="hidden">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Image URL (Optional)
             </label>
             <input
@@ -248,19 +275,23 @@ export default function ItemFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, imageUrl: e.target.value })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
-                getFieldError('imageUrl') ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 ${
+                getFieldError('imageUrl')
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               placeholder="https://example.com/image.jpg"
               disabled={isLoading}
             />
             {getFieldError('imageUrl') ? (
-              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <p
+                className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+              >
                 <AlertCircle className="w-3 h-3" />
                 {getFieldError('imageUrl')}
               </p>
             ) : (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className={`text-xs ${theme.secondary.textMuted} mt-1`}>
                 Paste an image URL from the web
               </p>
             )}
@@ -268,7 +299,9 @@ export default function ItemFormModal({
 
           {/* Food Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-2`}
+            >
               Food Type *
             </label>
             <div className="flex gap-4">
@@ -281,7 +314,9 @@ export default function ItemFormModal({
                   className="w-4 h-4 text-green-600"
                   disabled={isLoading}
                 />
-                <span className="flex items-center gap-1 text-sm text-gray-700">
+                <span
+                  className={`flex items-center gap-1 text-sm ${theme.secondary.text}`}
+                >
                   <span className="text-green-600 text-lg">🟢</span>
                   Vegetarian
                 </span>
@@ -295,7 +330,9 @@ export default function ItemFormModal({
                   className="w-4 h-4 text-red-600"
                   disabled={isLoading}
                 />
-                <span className="flex items-center gap-1 text-sm text-gray-700">
+                <span
+                  className={`flex items-center gap-1 text-sm ${theme.secondary.text}`}
+                >
                   <span className="text-red-600 text-lg">🔴</span>
                   Non-Vegetarian
                 </span>
@@ -303,9 +340,11 @@ export default function ItemFormModal({
             </div>
           </div>
 
-          {/* Sort Order */}
+          {/* Sort Order (hidden) */}
           <div className="hidden">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Sort Order
             </label>
             <input
@@ -317,7 +356,7 @@ export default function ItemFormModal({
                   sortOrder: parseInt(e.target.value) || 0,
                 })
               }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none"
+              className={`w-full px-3 py-2 ${getThemeClasses.input()}`}
               min="0"
               disabled={isLoading}
             />
@@ -332,12 +371,12 @@ export default function ItemFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, isAvailable: e.target.checked })
               }
-              className="w-4 h-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-200"
+              className={`w-4 h-4 ${theme.accent.textDark} rounded focus:ring-2 focus:ring-indigo-200`}
               disabled={isLoading}
             />
             <label
               htmlFor="isAvailable"
-              className="text-sm font-medium text-gray-700"
+              className={`text-sm font-medium ${theme.secondary.text}`}
             >
               Available now
             </label>
@@ -349,14 +388,14 @@ export default function ItemFormModal({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-4 py-2 ${getThemeClasses.buttonSecondary()} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !formData.name.trim() || !formData.price}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-4 py-2 ${getThemeClasses.buttonPrimary()} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isLoading ? 'Saving...' : item ? 'Update Item' : 'Add Item'}
             </button>

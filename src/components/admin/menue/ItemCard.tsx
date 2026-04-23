@@ -1,6 +1,6 @@
-// src/components/admin/menu/ItemCard.tsx
 import { Edit2, Trash2 } from 'lucide-react'
 import { Item } from '../../../types/menue'
+import theme from '../../../configs/theme.js'
 
 interface ItemCardProps {
   item: Item
@@ -9,13 +9,8 @@ interface ItemCardProps {
   onToggleAvailability: () => void
 }
 
-const formatPrice = (paise: number) => {
-  return `₹${paise}`
-}
-
-const isSampleItem = (name: string) => {
-  return name.startsWith('Sample ')
-}
+const formatPrice = (paise: number) => `₹${paise}`
+const isSampleItem = (name: string) => name.startsWith('Sample ')
 
 export default function ItemCard({
   item,
@@ -27,15 +22,17 @@ export default function ItemCard({
 
   return (
     <div
-      className={`bg-white border-2 rounded-lg p-4 transition ${
+      className={`border-2 rounded-lg p-4 transition ${
         isSample
-          ? 'border-l-4 border-l-orange-500 bg-orange-50'
-          : 'border-gray-200 hover:shadow-md'
+          ? `border-l-4 border-l-orange-500 ${theme.status.warning.bgLight}`
+          : `${theme.secondary.bg} ${theme.secondary.border} hover:shadow-md`
       }`}
     >
       {isSample && (
         <div className="mb-2">
-          <span className="inline-block px-2 py-1 bg-orange-500 text-white text-xs rounded font-medium">
+          <span
+            className={`inline-block px-2 py-1 ${theme.status.warning.badge} ${theme.primary.text} text-xs rounded font-medium`}
+          >
             ⚠️ SAMPLE
           </span>
         </div>
@@ -43,7 +40,9 @@ export default function ItemCard({
 
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
-          <h4 className="font-semibold text-gray-900 mb-1">{item.name}</h4>
+          <h4 className={`font-semibold ${theme.secondary.text} mb-1`}>
+            {item.name}
+          </h4>
 
           <div className="flex flex-wrap items-center gap-2 mb-2 text-sm">
             <span
@@ -53,14 +52,16 @@ export default function ItemCard({
             >
               {item.isVeg ? '🟢' : '🔴'} {item.isVeg ? 'Veg' : 'Non-Veg'}
             </span>
-            <span className="text-gray-400">•</span>
-            <span className="font-semibold text-blue-500">
+            <span className={theme.secondary.textSubtle}>•</span>
+            <span className={`font-semibold ${theme.accent.text}`}>
               {formatPrice(item.price)}
             </span>
           </div>
 
           {item.description && (
-            <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+            <p
+              className={`text-sm ${theme.secondary.textMuted} line-clamp-2 mb-2`}
+            >
               {item.description}
             </p>
           )}
@@ -69,8 +70,8 @@ export default function ItemCard({
             onClick={onToggleAvailability}
             className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${
               item.isAvailable
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
+                ? `${theme.status.success.bg} ${theme.status.success.textDark}`
+                : `${theme.status.error.bg} ${theme.status.error.textDark}`
             }`}
           >
             {item.isAvailable ? '✅ Available' : '❌ Out of Stock'}
@@ -78,17 +79,19 @@ export default function ItemCard({
         </div>
       </div>
 
-      <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+      <div
+        className={`flex gap-2 mt-3 pt-3 border-t ${theme.secondary.border}`}
+      >
         <button
           onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition font-medium"
+          className={`flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm ${theme.accent.bgLight} hover:${theme.accent.bgLightHover} ${theme.accent.textDark} rounded-lg transition font-medium`}
         >
           <Edit2 className="w-4 h-4" />
           Edit
         </button>
         <button
           onClick={onDelete}
-          className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition font-medium"
+          className={`flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm ${theme.status.error.bgLight} hover:${theme.status.error.bg} ${theme.status.error.icon} rounded-lg transition font-medium`}
         >
           <Trash2 className="w-4 h-4" />
           Delete

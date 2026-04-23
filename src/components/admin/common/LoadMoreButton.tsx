@@ -1,5 +1,5 @@
-// src/components/admin/common/LoadMoreButton.tsx
 import { ChevronDown, Loader2 } from 'lucide-react'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 interface LoadMoreButtonProps {
   onLoadMore: () => void
@@ -21,7 +21,7 @@ export default function LoadMoreButton({
   if (!hasMore) {
     return (
       <div className="text-center py-4">
-        <p className="text-sm text-gray-500">
+        <p className={`text-sm ${theme.secondary.textMuted}`}>
           All {totalCount} {itemName} loaded
         </p>
       </div>
@@ -30,13 +30,13 @@ export default function LoadMoreButton({
 
   return (
     <div className="flex flex-col items-center gap-3 py-6">
-      <p className="text-sm text-gray-600">
+      <p className={`text-sm ${theme.secondary.textMuted}`}>
         Showing {currentCount} of {totalCount} {itemName}
       </p>
       <button
         onClick={onLoadMore}
         disabled={isLoading}
-        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed border-2 border-blue-200 hover:border-blue-300"
+        className={getThemeClasses.loadMoreButton()}
       >
         {isLoading ? (
           <>

@@ -13,6 +13,7 @@ import CategoryFormModal from '../../../components/admin/menue/CategoryFormModal
 import ItemFormModal from '../../../components/admin/menue/ItemFormModal'
 import LoadMoreButton from '../../../components/admin/common/LoadMoreButton'
 import { categoryService, itemService } from '../../../utils/menuService'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 export default function MenuManagement() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -704,13 +705,11 @@ export default function MenuManagement() {
     return rootCategories
   }
 
-  // ── renderCategory: passes liveChildrenCount computed from live state ──
   const renderCategory = (category: Category, level: number = 0) => {
     const categoryItems = itemsByCategory[category.id]?.items || []
     const itemsPagination = itemsByCategory[category.id]
     const isExpanded = expandedCategories.has(category.id)
 
-    // Always fresh: count how many entries in categories[] have this as parent
     const liveChildrenCount = categories.filter(
       (c) => c.parentId === category.id,
     ).length
@@ -780,18 +779,21 @@ export default function MenuManagement() {
         />
       )}
 
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1
+            className={`text-2xl sm:text-3xl font-bold ${theme.secondary.text}`}
+          >
             Menu Management
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className={`${theme.secondary.textMuted} mt-1`}>
             Manage your categories and menu items
           </p>
         </div>
         <button
           onClick={() => handleOpenCategoryModal()}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium shadow-sm"
+          className={`inline-flex items-center justify-center gap-2 px-4 py-2 ${getThemeClasses.buttonPrimary()} shadow-sm`}
         >
           <Plus className="w-5 h-5" />
           Add Category
@@ -799,42 +801,46 @@ export default function MenuManagement() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-lg border shadow-sm p-4">
+      <div className={getThemeClasses.searchBar()}>
         <div className="flex gap-2 mb-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search
+              className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${theme.secondary.textSubtle}`}
+            />
             <input
               type="text"
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch(1)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full pl-10 pr-4 py-2 ${getThemeClasses.input()}`}
             />
           </div>
           <button
             onClick={() => handleSearch(1)}
             disabled={!searchQuery.trim()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`px-6 py-2 ${getThemeClasses.buttonPrimary()} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Search
           </button>
           {isSearchMode && (
             <button
               onClick={handleClearSearch}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium"
+              className={`px-4 py-2 ${theme.secondary.bgMuted} ${theme.secondary.text} rounded-lg hover:${theme.secondary.bgHover} transition font-medium`}
             >
               <X className="w-5 h-5" />
             </button>
           )}
         </div>
         <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label
+            className={`flex items-center gap-2 text-sm ${theme.secondary.text} cursor-pointer`}
+          >
             <input
               type="checkbox"
               checked={searchItems}
               onChange={(e) => setSearchItems(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className={`rounded border-gray-300 ${theme.accent.textDark} focus:ring-indigo-500`}
             />
             Search Items
           </label>
@@ -843,23 +849,25 @@ export default function MenuManagement() {
 
       {/* Search Results */}
       {isSearchMode && (
-        <div className="bg-white rounded-lg border shadow-sm p-4">
+        <div className={getThemeClasses.searchBar()}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className={`text-lg font-semibold ${theme.secondary.text}`}>
               Search Results ({searchPagination.total})
             </h2>
             <button
               onClick={handleClearSearch}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className={`text-sm ${theme.accent.textDark} hover:${theme.accent.text} font-medium`}
             >
               ← Back to Categories
             </button>
           </div>
 
           {searchPagination.isLoading && searchResults.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">Loading...</div>
+            <div className={`text-center py-8 ${theme.secondary.textMuted}`}>
+              Loading...
+            </div>
           ) : searchResults.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className={`text-center py-8 ${theme.secondary.textMuted}`}>
               No items found for "{searchQuery}"
             </div>
           ) : (
@@ -872,11 +880,11 @@ export default function MenuManagement() {
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition"
+                      className={`flex items-center justify-between p-4 border ${theme.secondary.border} rounded-lg hover:border-indigo-300 transition`}
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-gray-900">
+                          <h4 className={`font-medium ${theme.secondary.text}`}>
                             {item.name}
                           </h4>
                           {item.isVeg ? (
@@ -890,31 +898,35 @@ export default function MenuManagement() {
                           )}
                         </div>
                         {item.description && (
-                          <p className="text-sm text-gray-600 mb-1">
+                          <p
+                            className={`text-sm ${theme.secondary.textMuted} mb-1`}
+                          >
                             {item.description}
                           </p>
                         )}
-                        <p className="text-xs text-gray-500">
+                        <p className={`text-xs ${theme.secondary.textSubtle}`}>
                           {category?.name || 'Unknown Category'}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-lg font-semibold text-gray-900">
+                        <span
+                          className={`text-lg font-semibold ${theme.secondary.text}`}
+                        >
                           ₹{(item.price / 100).toFixed(2)}
                         </span>
                         <button
                           onClick={() => handleToggleItemAvailability(item)}
                           className={`px-3 py-1 rounded text-xs font-medium ${
                             item.isAvailable
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                              ? `${theme.status.success.bg} ${theme.status.success.text}`
+                              : `${theme.status.error.bg} ${theme.status.error.text}`
                           }`}
                         >
                           {item.isAvailable ? 'Available' : 'Unavailable'}
                         </button>
                         <button
                           onClick={() => handleOpenItemModal(item)}
-                          className="px-3 py-1 bg-blue-50 text-blue-600 rounded text-sm font-medium hover:bg-blue-100 transition"
+                          className={`px-3 py-1 ${theme.accent.bgLight} ${theme.accent.textDark} rounded text-sm font-medium hover:${theme.accent.bgLightHover} transition`}
                         >
                           Edit
                         </button>
@@ -943,19 +955,25 @@ export default function MenuManagement() {
       {!isSearchMode && (
         <>
           {categoryTree.length === 0 ? (
-            <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-gray-400" />
+            <div
+              className={`${theme.secondary.bg} rounded-xl border-2 border-dashed ${theme.secondary.border} p-12 text-center`}
+            >
+              <div
+                className={`w-16 h-16 ${theme.secondary.bgMuted} rounded-full flex items-center justify-center mx-auto mb-4`}
+              >
+                <Plus className={`w-8 h-8 ${theme.secondary.textSubtle}`} />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3
+                className={`text-lg font-medium ${theme.secondary.text} mb-2`}
+              >
                 No categories yet
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className={`${theme.secondary.textMuted} mb-4`}>
                 Get started by adding your first category
               </p>
               <button
                 onClick={() => handleOpenCategoryModal()}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+                className={`inline-flex items-center gap-2 px-6 py-3 ${getThemeClasses.buttonPrimary()}`}
               >
                 <Plus className="w-5 h-5" />
                 Add Category

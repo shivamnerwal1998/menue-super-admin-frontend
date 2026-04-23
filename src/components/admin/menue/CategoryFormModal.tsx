@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
 import Modal from '../common/Modal'
 import { Category, ValidationError } from '../../../types/menue'
+import theme, { getThemeClasses } from '../../../configs/theme.js'
 
 interface CategoryFormModalProps {
   isOpen: boolean
@@ -11,8 +12,8 @@ interface CategoryFormModalProps {
   category?: Category
   isLoading?: boolean
   validationErrors?: ValidationError[]
-  categories?: Category[] // ✅ NEW: For parent selector
-  parentId?: number | null // ✅ NEW: Pre-selected parent
+  categories?: Category[]
+  parentId?: number | null
 }
 
 export default function CategoryFormModal({
@@ -56,7 +57,6 @@ export default function CategoryFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name.trim()) return
-
     await onSave(formData)
   }
 
@@ -65,12 +65,9 @@ export default function CategoryFormModal({
     return error?.message
   }
 
-  // ✅ Filter categories for parent selector (only level 0 and 1 can be parents)
   const availableParents = categories.filter((cat) => {
     const catLevel = cat.level || 0
-    // Can't select self as parent
     if (category && cat.id === category.id) return false
-    // Only level 0 and 1 can be parents (max depth is 2)
     return catLevel < 2
   })
 
@@ -90,8 +87,10 @@ export default function CategoryFormModal({
         <div className="space-y-4">
           {/* Parent Category Info */}
           {parentId && !category && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div
+              className={`p-3 ${theme.status.info.bgLight} border ${theme.status.info.border} rounded-lg`}
+            >
+              <p className={`text-sm ${theme.status.info.textDark}`}>
                 Creating subcategory under:{' '}
                 <strong>
                   {categories.find((c) => c.id === parentId)?.name}
@@ -102,7 +101,9 @@ export default function CategoryFormModal({
 
           {/* Category Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Category Name *
             </label>
             <input
@@ -111,15 +112,19 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
-                getFieldError('name') ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 ${
+                getFieldError('name')
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               placeholder="e.g., Starters"
               maxLength={200}
               disabled={isLoading}
             />
             {getFieldError('name') && (
-              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <p
+                className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+              >
                 <AlertCircle className="w-3 h-3" />
                 {getFieldError('name')}
               </p>
@@ -128,7 +133,9 @@ export default function CategoryFormModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Description (Optional)
             </label>
             <textarea
@@ -136,10 +143,10 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
+              className={`w-full px-3 py-2 ${
                 getFieldError('description')
-                  ? 'border-red-500'
-                  : 'border-gray-300'
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               placeholder="Brief description of this category"
               rows={3}
@@ -147,11 +154,13 @@ export default function CategoryFormModal({
               disabled={isLoading}
             />
             <div className="flex justify-between items-center mt-1">
-              <p className="text-xs text-gray-500">
+              <p className={`text-xs ${theme.secondary.textMuted}`}>
                 {formData.description.length}/500 characters
               </p>
               {getFieldError('description') && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
+                <p
+                  className={`text-xs ${theme.status.error.icon} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-3 h-3" />
                   {getFieldError('description')}
                 </p>
@@ -159,10 +168,12 @@ export default function CategoryFormModal({
             </div>
           </div>
 
-          {/* Parent Category Selector (Only if not pre-selected) */}
+          {/* Parent Category Selector (hidden unless needed) */}
           {!parentId && (
-            <div className='hidden'>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="hidden">
+              <label
+                className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+              >
                 Parent Category (Optional)
               </label>
               <select
@@ -173,10 +184,10 @@ export default function CategoryFormModal({
                     parentId: e.target.value ? parseInt(e.target.value) : null,
                   })
                 }
-                className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
+                className={`w-full px-3 py-2 ${
                   getFieldError('parentId')
-                    ? 'border-red-500'
-                    : 'border-gray-300'
+                    ? getThemeClasses.inputError()
+                    : getThemeClasses.input()
                 }`}
                 disabled={isLoading}
               >
@@ -185,7 +196,6 @@ export default function CategoryFormModal({
                   const catLevel = cat.level || 0
                   const indent = '  '.repeat(catLevel)
                   const disabled = catLevel >= 2
-
                   return (
                     <option key={cat.id} value={cat.id} disabled={disabled}>
                       {indent}
@@ -197,7 +207,9 @@ export default function CategoryFormModal({
                 })}
               </select>
               {getFieldError('parentId') && (
-                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <p
+                  className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+                >
                   <AlertCircle className="w-3 h-3" />
                   {getFieldError('parentId')}
                 </p>
@@ -205,9 +217,11 @@ export default function CategoryFormModal({
             </div>
           )}
 
-          {/* Sort Order */}
-          <div className='hidden'>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          {/* Sort Order (hidden) */}
+          <div className="hidden">
+            <label
+              className={`block text-sm font-medium ${theme.secondary.text} mb-1`}
+            >
               Sort Order
             </label>
             <input
@@ -219,16 +233,18 @@ export default function CategoryFormModal({
                   sortOrder: parseInt(e.target.value) || 0,
                 })
               }
-              className={`w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:outline-none ${
+              className={`w-full px-3 py-2 ${
                 getFieldError('sortOrder')
-                  ? 'border-red-500'
-                  : 'border-gray-300'
+                  ? getThemeClasses.inputError()
+                  : getThemeClasses.input()
               }`}
               min="0"
               disabled={isLoading}
             />
             {getFieldError('sortOrder') && (
-              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <p
+                className={`text-xs ${theme.status.error.icon} mt-1 flex items-center gap-1`}
+              >
                 <AlertCircle className="w-3 h-3" />
                 {getFieldError('sortOrder')}
               </p>
@@ -244,12 +260,12 @@ export default function CategoryFormModal({
               onChange={(e) =>
                 setFormData({ ...formData, isActive: e.target.checked })
               }
-              className="w-4 h-4 text-blue-500 rounded focus:ring-2 focus:ring-blue-200"
+              className={`w-4 h-4 ${theme.accent.textDark} rounded focus:ring-2 focus:ring-indigo-200`}
               disabled={isLoading}
             />
             <label
               htmlFor="isActive"
-              className="text-sm font-medium text-gray-700"
+              className={`text-sm font-medium ${theme.secondary.text}`}
             >
               Active (visible on menu)
             </label>
@@ -261,14 +277,14 @@ export default function CategoryFormModal({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-4 py-2 ${getThemeClasses.buttonSecondary()} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !formData.name.trim()}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`flex-1 px-4 py-2 ${getThemeClasses.buttonPrimary()} disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isLoading
                 ? 'Saving...'
