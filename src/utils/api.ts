@@ -1,5 +1,6 @@
 // Get API base URL from env (or default to localhost)
-const API_BASE = 'http://localhost:5000/api';
+console.log("Meta -> ", import.meta);
+const baseUrl = import.meta.env.VITE_API_URL;
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -43,7 +44,7 @@ class ApiClient {
     try {
       console.log(`[API] ${options.method || 'GET'} ${endpoint}`, options.body);
 
-      const response = await fetch(`${API_BASE}${endpoint}`, config);
+      const response = await fetch(`${baseUrl}${endpoint}`, config);
 
       // Parse response
       let data;

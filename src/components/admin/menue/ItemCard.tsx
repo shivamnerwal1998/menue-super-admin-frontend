@@ -10,7 +10,7 @@ interface ItemCardProps {
 }
 
 const formatPrice = (paise: number) => {
-  return `₹${(paise / 100).toFixed(0)}`
+  return `₹${paise}`
 }
 
 const isSampleItem = (name: string) => {
