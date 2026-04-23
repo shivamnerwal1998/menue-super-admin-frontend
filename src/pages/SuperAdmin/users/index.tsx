@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { api } from '../../../utils/api'
 import UserCard from '../../../components/superAdmin/UserCard'
 import Pagination from '../../../components/shared/Pagination'
+import EditUserModal from '../../../components/superAdmin/EditUserModal'
+import StatusModal from '../../../components/shared/StatusModal'
+import { superAdmin } from '../../../utils/constants'
 
 type User = {
   id: number
@@ -20,7 +23,6 @@ type User = {
   lastLogin?: string
 }
 
-// ✅ API response structure (flat, not nested like restaurants)
 type ApiResponse = {
   success: boolean
   total: number
@@ -40,6 +42,18 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalRecords, setTotalRecords] = useState(0)
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean
+    type: 'success' | 'error'
+    title: string
+    message: string
+  }>({
+    isOpen: false,
+    type: 'success',
+    title: '',
+    message: '',
+  })
   const limit = 10
 
   useEffect(() => {
@@ -53,7 +67,7 @@ export default function UsersPage() {
 
       // ✅ Real API call with pagination
       const response: ApiResponse = await api.get(
-        `/super-admin/users?page=${currentPage}&limit=${limit}`,
+        `${superAdmin.getUsers}?page=${currentPage}&limit=${limit}`,
       )
 
       if (response.success) {
@@ -65,28 +79,59 @@ export default function UsersPage() {
       }
     } catch (err) {
       console.error('Failed to fetch users:', err)
-      setError(err.message || 'Failed to load users')
+      setError('Failed to load users')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleEdit = (user: User) => {
-    alert(`Edit: ${user.name}`)
-    // TODO: Open edit modal with user data
+  const handleEdit = (user: any) => {
+    setEditingUser(user)
   }
 
   const handleToggle = async (id: number, isActive: boolean) => {
+    // ✅ Business Rule: If disabling user, warn about restaurant
+    if (!isActive) {
+      const confirmMessage =
+        '⚠️ Warning: Disabling this user will also disable their restaurant.\n\n' +
+        'Are you sure you want to continue?'
+
+      if (!confirm(confirmMessage)) {
+        return
+      }
+    }
+
     // Optimistic update
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, isActive } : u)))
 
     try {
-      // ✅ Real API call for toggle
-      await api.patch(`/super-admin/users/${id}/toggle`, { isActive })
+      // ✅ Use /status endpoint
+      await api.patch(`${superAdmin.toggleUser}/${id}/status`, { isActive })
+
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Success!',
+        message: !isActive
+          ? 'User and their restaurant have been disabled'
+          : 'User enabled successfully',
+      })
+
+      // Refresh to get updated restaurant status
+      setTimeout(() => {
+        fetchUsers()
+      }, 1500)
     } catch (error) {
       console.error('Failed to toggle user:', error)
       // Revert on error
       fetchUsers()
+
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Toggle Failed',
+        message: 'Failed to update user status',
+      })
     }
   }
 
@@ -161,6 +206,19 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      <EditUserModal
+        isOpen={!!editingUser}
+        onClose={() => setEditingUser(null)}
+        user={editingUser}
+        onSuccess={fetchUsers}
+      />
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal((prev) => ({ ...prev, isOpen: false }))}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+      />
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

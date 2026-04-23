@@ -13,7 +13,7 @@ type RoleConfig = {
 }
 
 export default function HomePage() {
-  const { login, isAuthenticated, isSuperAdmin } = useAuth()
+  const { login, isAuthenticated, isSuperAdmin, isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -27,10 +27,14 @@ export default function HomePage() {
   useEffect(() => {
     if (!isAuthenticated) return
 
+    console.log('HomePage -> is Admin Role -> ', isAdmin ? 't' : 'f')
+
     if (isSuperAdmin) {
       navigate('/super-admin/dashboard', { replace: true })
+    } else if (isAdmin) {
+      navigate('/admin/dashboard', { replace: true })
     }
-  }, [isAuthenticated, isSuperAdmin, navigate])
+  }, [isAuthenticated, isSuperAdmin, isAdmin, navigate])
 
   const handleOpenModal = (role: RoleType) => {
     setSelectedRole(role)
@@ -84,13 +88,26 @@ export default function HomePage() {
           // Store token and role in context
           login(response.data.token, 'SUPER_ADMIN')
         } else {
-          throw new Error('Invalid response format from server')
+          throw new Error('Super Admin Login Failed')
         }
       } else {
-        // Restaurant Admin login (implement later)
-        setError('Restaurant admin login coming soon!')
-        setLoading(false)
-        return
+        const response = await api.post(
+          '/admin/login',
+          { email, password },
+          true,
+        )
+
+        if (response.success && response.data?.token) {
+      
+          login(response.data.token, 'ADMIN', response?.data?.user)
+
+          // Optional: Store user info
+          if (response.data.user) {
+            localStorage.setItem('user', JSON.stringify(response.data.user))
+          }
+        } else {
+          throw new Error('Admin Login Failed')
+        }
       }
     } catch (err) {
       console.error('Login error:', err)

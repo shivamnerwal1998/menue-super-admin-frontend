@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../../utils/api'
+import { superAdmin } from '../../../utils/constants'
 
 type UserFormData = {
   name: string
   email: string
   mobile: string
   password: string
+  dateOfBirth?: string
 }
-
 type EntityFormData = {
   name: string
   contact: string
@@ -99,7 +100,8 @@ export default function OnboardPage() {
     if (!userData.mobile) {
       newErrors.mobile = 'Mobile number is required'
     } else if (!validateMobile(userData.mobile)) {
-      newErrors.mobile = 'Invalid Indian mobile number (10 digits, starts with 6-9)'
+      newErrors.mobile =
+        'Invalid Indian mobile number (10 digits, starts with 6-9)'
     }
 
     if (!userData.password) {
@@ -123,7 +125,8 @@ export default function OnboardPage() {
     if (!entityData.contact) {
       newErrors.contact = 'Contact number is required'
     } else if (!validateMobile(entityData.contact)) {
-      newErrors.contact = 'Invalid Indian mobile number (10 digits, starts with 6-9)'
+      newErrors.contact =
+        'Invalid Indian mobile number (10 digits, starts with 6-9)'
     }
 
     setErrors(newErrors)
@@ -220,6 +223,7 @@ export default function OnboardPage() {
           email: userData.email,
           mobile: userData.mobile,
           password: userData.password,
+          ...(userData.dateOfBirth && { dateOfBirth: userData.dateOfBirth }),
         },
         entity: {
           name: entityData.name,
@@ -227,7 +231,9 @@ export default function OnboardPage() {
           ...(entityData.email && { email: entityData.email }),
           ...(entityData.address && { address: entityData.address }),
           ...(entityData.latitude && { latitude: Number(entityData.latitude) }),
-          ...(entityData.longitude && { longitude: Number(entityData.longitude) }),
+          ...(entityData.longitude && {
+            longitude: Number(entityData.longitude),
+          }),
           ...(entityData.gmapLink && { gmapLink: entityData.gmapLink }),
           ...(entityData.logo && { logo: entityData.logo }),
           ...(entityData.image && { image: entityData.image }),
@@ -237,14 +243,19 @@ export default function OnboardPage() {
         },
       }
 
-      const response = await api.post('/super-admin/onboard', payload)
+      const response = await api.post(
+        superAdmin.onboardUserAndRestaurant,
+        payload,
+      )
 
       // Success - redirect to restaurants page
-      alert(`Success! Restaurant and admin created.\nUser ID: ${response.userId}\nEntity ID: ${response.entityId}`)
+      alert(
+        `Success! Restaurant and admin created.\nUser ID: ${response.userId}\nEntity ID: ${response.entityId}`,
+      )
       navigate('/super-admin/restaurants')
-    } catch (err: any) {
+    } catch (err) {
       console.error('Onboard error:', err)
-      setSubmitError(err.message || 'Failed to create restaurant and admin. Please try again.')
+      setSubmitError('Failed to create restaurant and admin. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -258,13 +269,27 @@ export default function OnboardPage() {
           onClick={() => navigate('/super-admin/dashboard')}
           className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
           Back to Dashboard
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Onboard Restaurant & Admin</h1>
-        <p className="text-gray-600 mt-1">Create a new restaurant account with admin access</p>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Onboard Restaurant & Admin
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Create a new restaurant account with admin access
+        </p>
       </div>
 
       {/* Progress Indicator */}
@@ -292,8 +317,12 @@ export default function OnboardPage() {
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-1">Admin User Details</h2>
-                <p className="text-sm text-gray-600">Create the admin account who will manage this restaurant</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                  Admin User Details
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Create the admin account who will manage this restaurant
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -304,13 +333,17 @@ export default function OnboardPage() {
                   <input
                     type="text"
                     value={userData.name}
-                    onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+                    onChange={(e) =>
+                      setUserData({ ...userData, name: e.target.value })
+                    }
                     placeholder="John Doe"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+                  {errors.name && (
+                    <p className="text-sm text-red-600 mt-1">{errors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -320,14 +353,20 @@ export default function OnboardPage() {
                   <input
                     type="email"
                     value={userData.email}
-                    onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                    onChange={(e) =>
+                      setUserData({ ...userData, email: e.target.value })
+                    }
                     placeholder="john@example.com"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
-                  <p className="text-xs text-gray-500 mt-1">This will be used for login</p>
+                  {errors.email && (
+                    <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    This will be used for login
+                  </p>
                 </div>
 
                 <div>
@@ -337,15 +376,21 @@ export default function OnboardPage() {
                   <input
                     type="tel"
                     value={userData.mobile}
-                    onChange={(e) => setUserData({ ...userData, mobile: e.target.value })}
+                    onChange={(e) =>
+                      setUserData({ ...userData, mobile: e.target.value })
+                    }
                     placeholder="9876543210"
                     maxLength={10}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.mobile ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.mobile && <p className="text-sm text-red-600 mt-1">{errors.mobile}</p>}
-                  <p className="text-xs text-gray-500 mt-1">10 digits, starts with 6-9</p>
+                  {errors.mobile && (
+                    <p className="text-sm text-red-600 mt-1">{errors.mobile}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    10 digits, starts with 6-9
+                  </p>
                 </div>
 
                 <div>
@@ -355,13 +400,33 @@ export default function OnboardPage() {
                   <input
                     type="password"
                     value={userData.password}
-                    onChange={(e) => setUserData({ ...userData, password: e.target.value })}
+                    onChange={(e) =>
+                      setUserData({ ...userData, password: e.target.value })
+                    }
                     placeholder="Minimum 6 characters"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.password ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
+                  {errors.password && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.password}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={userData.dateOfBirth || ''}
+                    onChange={(e) =>
+                      setUserData({ ...userData, dateOfBirth: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional</p>
                 </div>
               </div>
             </div>
@@ -371,8 +436,12 @@ export default function OnboardPage() {
           {currentStep === 2 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-1">Restaurant Basic Details</h2>
-                <p className="text-sm text-gray-600">Essential information about the restaurant</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                  Restaurant Basic Details
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Essential information about the restaurant
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -383,31 +452,46 @@ export default function OnboardPage() {
                   <input
                     type="text"
                     value={entityData.name}
-                    onChange={(e) => setEntityData({ ...entityData, name: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, name: e.target.value })
+                    }
                     placeholder="Pizza Palace"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.entityName ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.entityName && <p className="text-sm text-red-600 mt-1">{errors.entityName}</p>}
+                  {errors.entityName && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.entityName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Restaurant Contact Number <span className="text-red-500">*</span>
+                    Restaurant Contact Number{' '}
+                    <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
                     value={entityData.contact}
-                    onChange={(e) => setEntityData({ ...entityData, contact: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, contact: e.target.value })
+                    }
                     placeholder="9876543210"
                     maxLength={10}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.contact ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.contact && <p className="text-sm text-red-600 mt-1">{errors.contact}</p>}
-                  <p className="text-xs text-gray-500 mt-1">Customer-facing contact number</p>
+                  {errors.contact && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.contact}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Customer-facing contact number
+                  </p>
                 </div>
               </div>
             </div>
@@ -417,8 +501,12 @@ export default function OnboardPage() {
           {currentStep === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-1">Additional Details</h2>
-                <p className="text-sm text-gray-600">Optional information (can be added later)</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                  Additional Details
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Optional information (can be added later)
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -429,13 +517,19 @@ export default function OnboardPage() {
                   <input
                     type="email"
                     value={entityData.email}
-                    onChange={(e) => setEntityData({ ...entityData, email: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, email: e.target.value })
+                    }
                     placeholder="contact@restaurant.com"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.entityEmail ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.entityEmail && <p className="text-sm text-red-600 mt-1">{errors.entityEmail}</p>}
+                  {errors.entityEmail && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.entityEmail}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -444,14 +538,20 @@ export default function OnboardPage() {
                   </label>
                   <textarea
                     value={entityData.address}
-                    onChange={(e) => setEntityData({ ...entityData, address: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, address: e.target.value })
+                    }
                     placeholder="123 Main Street, City, State - 123456"
                     rows={3}
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition resize-none ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.address && <p className="text-sm text-red-600 mt-1">{errors.address}</p>}
+                  {errors.address && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.address}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -462,13 +562,22 @@ export default function OnboardPage() {
                     <input
                       type="text"
                       value={entityData.latitude}
-                      onChange={(e) => setEntityData({ ...entityData, latitude: e.target.value })}
+                      onChange={(e) =>
+                        setEntityData({
+                          ...entityData,
+                          latitude: e.target.value,
+                        })
+                      }
                       placeholder="28.6139"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                         errors.latitude ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
-                    {errors.latitude && <p className="text-sm text-red-600 mt-1">{errors.latitude}</p>}
+                    {errors.latitude && (
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.latitude}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -478,13 +587,22 @@ export default function OnboardPage() {
                     <input
                       type="text"
                       value={entityData.longitude}
-                      onChange={(e) => setEntityData({ ...entityData, longitude: e.target.value })}
+                      onChange={(e) =>
+                        setEntityData({
+                          ...entityData,
+                          longitude: e.target.value,
+                        })
+                      }
                       placeholder="77.2090"
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                         errors.longitude ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
-                    {errors.longitude && <p className="text-sm text-red-600 mt-1">{errors.longitude}</p>}
+                    {errors.longitude && (
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.longitude}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -495,13 +613,19 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.gmapLink}
-                    onChange={(e) => setEntityData({ ...entityData, gmapLink: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, gmapLink: e.target.value })
+                    }
                     placeholder="https://maps.google.com/?q=..."
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.gmapLink ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.gmapLink && <p className="text-sm text-red-600 mt-1">{errors.gmapLink}</p>}
+                  {errors.gmapLink && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.gmapLink}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -511,8 +635,12 @@ export default function OnboardPage() {
           {currentStep === 4 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-1">Branding & Online Presence</h2>
-                <p className="text-sm text-gray-600">Add logos, images, and social media links (all optional)</p>
+                <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                  Branding & Online Presence
+                </h2>
+                <p className="text-sm text-gray-600">
+                  Add logos, images, and social media links (all optional)
+                </p>
               </div>
 
               <div className="space-y-4">
@@ -523,13 +651,17 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.logo}
-                    onChange={(e) => setEntityData({ ...entityData, logo: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, logo: e.target.value })
+                    }
                     placeholder="https://example.com/logo.png"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.logo ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.logo && <p className="text-sm text-red-600 mt-1">{errors.logo}</p>}
+                  {errors.logo && (
+                    <p className="text-sm text-red-600 mt-1">{errors.logo}</p>
+                  )}
                 </div>
 
                 <div>
@@ -539,13 +671,17 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.image}
-                    onChange={(e) => setEntityData({ ...entityData, image: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, image: e.target.value })
+                    }
                     placeholder="https://example.com/banner.jpg"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.image ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.image && <p className="text-sm text-red-600 mt-1">{errors.image}</p>}
+                  {errors.image && (
+                    <p className="text-sm text-red-600 mt-1">{errors.image}</p>
+                  )}
                 </div>
 
                 <div>
@@ -555,13 +691,22 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.instagram}
-                    onChange={(e) => setEntityData({ ...entityData, instagram: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({
+                        ...entityData,
+                        instagram: e.target.value,
+                      })
+                    }
                     placeholder="https://instagram.com/restaurant"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.instagram ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.instagram && <p className="text-sm text-red-600 mt-1">{errors.instagram}</p>}
+                  {errors.instagram && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.instagram}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -571,13 +716,19 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.facebook}
-                    onChange={(e) => setEntityData({ ...entityData, facebook: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, facebook: e.target.value })
+                    }
                     placeholder="https://facebook.com/restaurant"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.facebook ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.facebook && <p className="text-sm text-red-600 mt-1">{errors.facebook}</p>}
+                  {errors.facebook && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.facebook}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -587,35 +738,51 @@ export default function OnboardPage() {
                   <input
                     type="url"
                     value={entityData.website}
-                    onChange={(e) => setEntityData({ ...entityData, website: e.target.value })}
+                    onChange={(e) =>
+                      setEntityData({ ...entityData, website: e.target.value })
+                    }
                     placeholder="https://restaurant.com"
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition ${
                       errors.website ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
-                  {errors.website && <p className="text-sm text-red-600 mt-1">{errors.website}</p>}
+                  {errors.website && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.website}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Summary Review */}
               <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <h3 className="font-medium text-gray-900 mb-3">Review Summary</h3>
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Review Summary
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Admin:</span>
-                    <span className="font-medium text-gray-900">{userData.name}</span>
+                    <span className="font-medium text-gray-900">
+                      {userData.name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Email:</span>
-                    <span className="font-medium text-gray-900">{userData.email}</span>
+                    <span className="font-medium text-gray-900">
+                      {userData.email}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Restaurant:</span>
-                    <span className="font-medium text-gray-900">{entityData.name}</span>
+                    <span className="font-medium text-gray-900">
+                      {entityData.name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Contact:</span>
-                    <span className="font-medium text-gray-900">{entityData.contact}</span>
+                    <span className="font-medium text-gray-900">
+                      {entityData.contact}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -626,11 +793,23 @@ export default function OnboardPage() {
           {submitError && (
             <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-red-800">Submission Failed</h4>
+                  <h4 className="text-sm font-medium text-red-800">
+                    Submission Failed
+                  </h4>
                   <p className="text-sm text-red-700 mt-1">{submitError}</p>
                 </div>
               </div>
@@ -665,9 +844,24 @@ export default function OnboardPage() {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Creating...
                   </>
