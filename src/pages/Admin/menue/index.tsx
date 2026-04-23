@@ -8,6 +8,7 @@ import {
   ValidationError,
 } from '../../../types/menue'
 import Toast from '../../../components/admin/common/Toast'
+import Spinner from '../../../components/admin/common/Spinner'
 import CategoryCard from '../../../components/admin/menue/CategoryCard'
 import CategoryFormModal from '../../../components/admin/menue/CategoryFormModal'
 import ItemFormModal from '../../../components/admin/menue/ItemFormModal'
@@ -41,6 +42,9 @@ export default function MenuManagement() {
     isLoading: false,
   })
 
+  // null = not yet attempted; true = in progress; false = done
+  const [initialLoading, setInitialLoading] = useState(true)
+
   const [itemsByCategory, setItemsByCategory] = useState<
     Record<
       number,
@@ -73,7 +77,12 @@ export default function MenuManagement() {
   }, [])
 
   const loadCategories = async (page = 1) => {
+    // Only set the full-page spinner on first load (page 1 with no data yet)
+    if (page === 1 && categories.length === 0) {
+      setInitialLoading(true)
+    }
     setCategoryPagination(prev => ({ ...prev, isLoading: true }))
+
     try {
       const response = await categoryService.getAll({
         page,
@@ -98,10 +107,12 @@ export default function MenuManagement() {
         hasMore: response.total > 10 && response.page * response.limit < response.total,
         isLoading: false,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
       setCategoryPagination(prev => ({ ...prev, isLoading: false }))
+    } finally {
+      setInitialLoading(false)
     }
   }
 
@@ -129,7 +140,7 @@ export default function MenuManagement() {
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load children error:', error)
       showToast(error.message || 'Failed to load subcategories', 'error')
     }
@@ -164,7 +175,7 @@ export default function MenuManagement() {
           isLoading: false,
         },
       }))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
       setItemsByCategory(prev => ({
@@ -264,7 +275,7 @@ export default function MenuManagement() {
           setSelectedParentId(null)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Category save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
@@ -304,7 +315,7 @@ export default function MenuManagement() {
 
       deleteWithChildren(category.id)
       showToast('Category deleted successfully', 'success')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
     }
@@ -320,7 +331,7 @@ export default function MenuManagement() {
         )
         showToast(`Category ${response.data.isActive ? 'activated' : 'deactivated'} successfully`, 'success')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Toggle category error:', error)
       showToast(error.message || 'Failed to toggle category status', 'error')
     }
@@ -395,7 +406,6 @@ export default function MenuManagement() {
             }
           }
 
-          // Sync search results via context
           if (isSearchMode) updateSearchResult(response.data)
 
           showToast('Item updated successfully', 'success')
@@ -432,7 +442,7 @@ export default function MenuManagement() {
           setShowItemModal(false)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Item save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
@@ -465,11 +475,10 @@ export default function MenuManagement() {
         ),
       )
 
-      // Sync search results via context
       if (isSearchMode) removeSearchResult(item.id)
 
       showToast('Item deleted successfully', 'success')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
@@ -492,7 +501,6 @@ export default function MenuManagement() {
           }))
         }
 
-        // Sync search results via context
         if (isSearchMode) updateSearchResult(updatedItem)
 
         showToast(
@@ -500,7 +508,7 @@ export default function MenuManagement() {
           'success',
         )
       }
-    } catch (error) {
+    } catch (error: any) {
       showToast(error.message || 'Failed to update item', 'error')
     }
   }
@@ -643,7 +651,7 @@ export default function MenuManagement() {
         </button>
       </div>
 
-      {/* ── Search Results (fed from header search via context) ── */}
+      {/* ── Search Results ── */}
       {isSearchMode && (
         <div className={getThemeClasses.searchBar()}>
           <div className="flex items-center justify-between mb-4">
@@ -652,14 +660,16 @@ export default function MenuManagement() {
             </h2>
             <button
               onClick={clearSearch}
-              className={`text-sm ${theme.accent.textDark} hover:${theme.accent.text} font-medium`}
+              className={`text-sm ${theme.accent.textDark} font-medium`}
             >
               ← Back to Categories
             </button>
           </div>
 
           {searchPagination.isLoading && searchResults.length === 0 ? (
-            <div className={`text-center py-8 ${theme.secondary.textMuted}`}>Loading...</div>
+            <div className="py-12 flex justify-center">
+              <Spinner size="md" message="Searching…" />
+            </div>
           ) : searchResults.length === 0 ? (
             <div className={`text-center py-8 ${theme.secondary.textMuted}`}>
               No items found for "{searchQuery}"
@@ -741,7 +751,16 @@ export default function MenuManagement() {
       {/* ── Category Tree ── */}
       {!isSearchMode && (
         <>
-          {categoryTree.length === 0 ? (
+          {/* Full-page spinner on initial load — no pre-filled values shown */}
+          {initialLoading ? (
+            <div className={`${theme.secondary.bg} rounded-xl border ${theme.secondary.border} py-20 flex justify-center`}>
+              <Spinner
+                size="lg"
+                message="Loading menu…"
+                submessage="Fetching your categories and items"
+              />
+            </div>
+          ) : categoryTree.length === 0 ? (
             <div
               className={`${theme.secondary.bg} rounded-xl border-2 border-dashed ${theme.secondary.border} p-12 text-center`}
             >

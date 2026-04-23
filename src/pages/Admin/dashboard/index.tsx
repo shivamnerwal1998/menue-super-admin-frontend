@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { itemService, StatsData, RestaurantData } from '../../../utils/menuService'
 import { ToastType } from '../../../types/menue'
 import Toast from '../../../components/admin/common/Toast'
+import PageLoader from '../../../components/admin/common/PageLoader'
+import Spinner from '../../../components/admin/common/Spinner'
 import QRCode from 'qrcode'
 import theme, { getThemeClasses } from '../../../configs/theme.js'
 
@@ -16,31 +18,43 @@ export default function AdminDashboard() {
 
   const [toast, setToast] = useState<ToastType | null>(null)
   const [showQRModal, setShowQRModal] = useState(false)
+
+  // null = not yet loaded (no pre-filled values shown)
   const [restaurant, setRestaurant] = useState<RestaurantData | null>(null)
-  const [statsData, setStatsData] = useState<StatsData>({
-    categories: { total: 0, active: 0, inactive: 0 },
-    items: { total: 0, available: 0, unavailable: 0, veg: 0, nonVeg: 0 },
-  })
+  const [statsData, setStatsData] = useState<StatsData | null>(null)
+
+  // Separate loading flags
+  const [restaurantLoading, setRestaurantLoading] = useState(true)
+  const [statsLoading, setStatsLoading] = useState(true)
+
+  // True only on the very first load (both APIs pending)
+  const isInitialLoading = restaurantLoading && statsLoading
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type })
   }
 
   const loadStats = async () => {
+    setStatsLoading(true)
     try {
       const data: StatsData = await itemService.getStats()
       setStatsData(data)
     } catch {
       showToast('Error fetching stats', 'error')
+    } finally {
+      setStatsLoading(false)
     }
   }
 
   const loadRestaurant = async () => {
+    setRestaurantLoading(true)
     try {
       const data = await itemService.getEntity()
       setRestaurant(data)
     } catch {
       showToast('Error fetching restaurant details', 'error')
+    } finally {
+      setRestaurantLoading(false)
     }
   }
 
@@ -102,57 +116,71 @@ export default function AdminDashboard() {
     doc.save(`${restaurant.name.replace(/\s+/g, '_')}_QR.pdf`)
   }
 
-  const stats = {
-    totalCategories: statsData.categories.total,
-    totalItems: statsData?.items?.total,
+  // ── If BOTH APIs are still loading → show full-page loader with wake-up msg
+  if (isInitialLoading) {
+    return (
+      <>
+        {toast && (
+          <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        )}
+        <PageLoader wakeUpDelay={3000} />
+      </>
+    )
   }
 
   return (
     <div className="space-y-6">
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
+        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
       )}
 
       {/* ── Welcome Banner ── */}
       <div className={getThemeClasses.heroBanner()}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold mb-1">
-              {restaurant ? restaurant.name : (user?.name || 'Admin')} 👋
-            </h1>
-            {restaurant ? (
-              <div className={`flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 ${theme.hero.textMuted} text-sm`}>
-                {restaurant.contact && (
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {restaurant.contact}
-                  </span>
-                )}
-                {restaurant.email && (
-                  <span className="flex items-center gap-1">
-                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {restaurant.email}
-                  </span>
-                )}
+            {restaurantLoading ? (
+              // Banner skeleton while restaurant loads
+              <div className="space-y-2">
+                <div className="h-7 w-48 bg-white/20 rounded-lg animate-pulse" />
+                <div className="h-4 w-64 bg-white/15 rounded animate-pulse" />
               </div>
             ) : (
-              <p className={`${theme.hero.textMuted} text-sm`}>Manage your restaurant menu and keep it up to date</p>
+              <>
+                <h1 className="text-2xl font-bold mb-1">
+                  {restaurant ? restaurant.name : (user?.name || 'Admin')} 👋
+                </h1>
+                {restaurant ? (
+                  <div className={`flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 ${theme.hero.textMuted} text-sm`}>
+                    {restaurant.contact && (
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        {restaurant.contact}
+                      </span>
+                    )}
+                    {restaurant.email && (
+                      <span className="flex items-center gap-1">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        {restaurant.email}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className={`${theme.hero.textMuted} text-sm`}>Manage your restaurant menu and keep it up to date</p>
+                )}
+              </>
             )}
           </div>
 
-          {/* QR Code Button */}
+          {/* QR Button */}
           <button
             onClick={() => setShowQRModal(true)}
+            disabled={restaurantLoading || !restaurant}
             title="View QR Code"
-            className={`flex-shrink-0 flex flex-col items-center gap-1 ${theme.hero.buttonBg} ${theme.hero.buttonBgHover} ${theme.hero.text} rounded-xl px-4 py-3 transition border ${theme.hero.buttonBorder}`}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 ${theme.hero.buttonBg} ${theme.hero.buttonBgHover} ${theme.hero.text} rounded-xl px-4 py-3 transition border ${theme.hero.buttonBorder} disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <rect x="3" y="3" width="7" height="7" rx="1" strokeWidth={2} />
@@ -178,7 +206,15 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className={`text-sm ${theme.secondary.textMuted} font-medium`}>Categories</p>
-          <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>{stats.totalCategories}</p>
+          {statsLoading ? (
+            <div className="mt-2">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>
+              {statsData?.categories.total ?? '—'}
+            </p>
+          )}
         </div>
 
         {/* Total Items */}
@@ -192,7 +228,15 @@ export default function AdminDashboard() {
             </div>
           </div>
           <p className={`text-sm ${theme.secondary.textMuted} font-medium`}>Total Items</p>
-          <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>{stats.totalItems}</p>
+          {statsLoading ? (
+            <div className="mt-2">
+              <Spinner size="sm" />
+            </div>
+          ) : (
+            <p className={`text-3xl font-bold ${theme.secondary.text} mt-1`}>
+              {statsData?.items.total ?? '—'}
+            </p>
+          )}
         </div>
       </div>
 
@@ -210,7 +254,7 @@ export default function AdminDashboard() {
             </p>
             <button
               onClick={() => navigate('/admin/menu')}
-              className={`px-4 py-2 ${theme.status.success.button} ${theme.status.success.buttonHover} ${theme.primary.text} text-sm rounded-lg transition font-medium`}
+              className={`px-4 py-2 ${theme.status.success.button} ${theme.status.success.buttonHover} text-white text-sm rounded-lg transition font-medium`}
             >
               Go to Menu Management
             </button>
@@ -251,7 +295,7 @@ export default function AdminDashboard() {
 
             <button
               onClick={handleDownloadPDF}
-              className={`flex items-center gap-2 px-5 py-2.5 ${theme.accent.bg} hover:${theme.accent.bgHover} ${theme.primary.text} text-sm font-medium rounded-lg transition w-full justify-center`}
+              className={`flex items-center gap-2 px-5 py-2.5 ${theme.accent.bg} hover:${theme.accent.bgHover} text-white text-sm font-medium rounded-lg transition w-full justify-center`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
