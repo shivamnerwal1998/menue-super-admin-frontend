@@ -16,6 +16,8 @@ import LoadMoreButton from '../../../components/admin/common/LoadMoreButton'
 import { categoryService, itemService } from '../../../utils/menuService'
 import theme, { getThemeClasses } from '../../../configs/theme.ts'
 import { useSearch } from '../../../state/SearchContext'
+import { asAppError } from '../../../utils/api.ts'
+
 
 export default function MenuManagement() {
   // ── Search state lives in context ────────────────────────────────────────
@@ -114,7 +116,8 @@ export default function MenuManagement() {
           response.page * response.limit < response.total,
         isLoading: false,
       })
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
       setCategoryPagination((prev) => ({ ...prev, isLoading: false }))
@@ -147,7 +150,8 @@ export default function MenuManagement() {
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Load children error:', error)
       showToast(error.message || 'Failed to load subcategories', 'error')
     }
@@ -191,7 +195,8 @@ export default function MenuManagement() {
           isLoading: false,
         },
       }))
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
       setItemsByCategory((prev) => ({
@@ -314,7 +319,8 @@ export default function MenuManagement() {
           setSelectedParentId(null)
         }
       }
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Category save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
@@ -356,7 +362,8 @@ export default function MenuManagement() {
 
       deleteWithChildren(category.id)
       showToast('Category deleted successfully', 'success')
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
     }
@@ -381,7 +388,8 @@ export default function MenuManagement() {
           'success',
         )
       }
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Toggle category error:', error)
       showToast(error.message || 'Failed to toggle category status', 'error')
     }
@@ -500,14 +508,15 @@ export default function MenuManagement() {
           setShowItemModal(false)
         }
       }
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Item save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
         showToast('Please fix the validation errors', 'error')
         return
       }
-      showToast('Failed to save item', 'error')
+      showToast(error.message || 'Failed to save item', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -539,7 +548,8 @@ export default function MenuManagement() {
       if (isSearchMode) removeSearchResult(item.id)
 
       showToast('Item deleted successfully', 'success')
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
@@ -573,7 +583,8 @@ export default function MenuManagement() {
           'success',
         )
       }
-    } catch (error) {
+    } catch (err) {
+      const error = asAppError(err)
       showToast(error.message || 'Failed to update item', 'error')
     }
   }
