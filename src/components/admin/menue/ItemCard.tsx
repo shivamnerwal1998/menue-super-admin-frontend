@@ -1,6 +1,6 @@
 import { Edit2, Trash2 } from 'lucide-react'
 import { Item } from '../../../types/menue'
-import theme from '../../../configs/theme.js'
+import theme from '../../../configs/theme.ts'
 
 interface ItemCardProps {
   item: Item

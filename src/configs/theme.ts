@@ -162,7 +162,7 @@ export const getThemeClasses = {
   heroBanner: () => `${theme.hero.gradient} ${theme.rounded.lg} p-6 ${theme.hero.text} ${theme.shadow.md}`,
 
   // Badges
-  badge: (color) => {
+  badge: (color: 'blue' | 'red' | 'green' | 'orange') => {
     const map = {
       blue:   `${theme.status.info.bgLight} ${theme.status.info.textDark}`,
       red:    `${theme.status.error.bg} ${theme.status.error.textDark}`,

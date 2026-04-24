@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { useAuth } from '../state/AuthContext'
 import { SearchProvider, SearchType, useSearch } from '../state/SearchContext'
-import theme, { getThemeClasses } from '../configs/theme.js'
+import theme, { getThemeClasses } from '../configs/theme.ts'
 
 type NavItem = {
   name: string
@@ -37,9 +37,18 @@ function AdminLayoutContent() {
       name: 'Dashboard',
       path: '/admin/dashboard',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
         </svg>
       ),
     },
@@ -47,9 +56,18 @@ function AdminLayoutContent() {
       name: 'Menu',
       path: '/admin/menu',
       icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+          />
         </svg>
       ),
     },
@@ -74,36 +92,66 @@ function AdminLayoutContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <header className={`fixed top-0 left-0 right-0 h-16 z-30 ${getThemeClasses.header()}`}>
+      <header
+        className={`fixed top-0 left-0 right-0 h-16 z-30 ${getThemeClasses.header()}`}
+      >
         <div className="h-full px-4 flex items-center gap-3">
-
           {/* Left: Hamburger + Logo */}
           <div className="flex items-center gap-3 flex-shrink-0">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`md:hidden p-2 ${theme.rounded.md} hover:${theme.primary.bgLight} ${theme.transition.base}`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 {isSidebarOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
                 )}
               </svg>
             </button>
 
             <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 ${theme.accent.bg} ${theme.rounded.lg} flex items-center justify-center ${theme.shadow.md}`}>
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              <div
+                className={`w-10 h-10 ${theme.accent.bg} ${theme.rounded.lg} flex items-center justify-center ${theme.shadow.md}`}
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
                 </svg>
               </div>
               <div className="hidden sm:block">
-                <h1 className={`text-lg font-bold ${theme.primary.text}`}>QR Menu</h1>
-                <p className={`text-xs ${theme.primary.textMuted} -mt-0.5`}>Restaurant Admin</p>
+                <h1 className={`text-lg font-bold ${theme.primary.text}`}>
+                  Qritzo
+                </h1>
+                <p className={`text-xs ${theme.primary.textMuted} -mt-0.5`}>
+                  Restaurant Admin
+                </p>
               </div>
             </div>
           </div>
@@ -114,10 +162,10 @@ function AdminLayoutContent() {
             <select
               value={searchType}
               onChange={(e) => setSearchType(e.target.value as SearchType)}
-              className="flex-shrink-0 bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-2 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer"
+              className="hidden flex-shrink-0 bg-slate-700 text-white text-sm rounded-lg border border-slate-600 px-2 py-1.5 focus:outline-none focus:border-indigo-400 cursor-pointer"
             >
               <option value="items">Items</option>
-              <option value="categories">Categories</option>
+              {/* <option value="categories">Categories</option> */}
             </select>
 
             {/* Input */}
@@ -156,10 +204,9 @@ function AdminLayoutContent() {
 
           {/* Right: Mobile search toggle + User info + Logout */}
           <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-
             {/* Mobile search icon */}
             <button
-              onClick={() => setMobileSearchOpen(prev => !prev)}
+              onClick={() => setMobileSearchOpen((prev) => !prev)}
               title="Search"
               className={`md:hidden relative p-2 rounded-lg transition ${
                 isSearchMode || mobileSearchOpen
@@ -177,8 +224,12 @@ function AdminLayoutContent() {
             {/* User info */}
             {user && (
               <div className="hidden sm:block text-right">
-                <p className={`text-sm font-medium ${theme.primary.text}`}>{user.name}</p>
-                <p className={`text-xs ${theme.primary.textMuted}`}>{user.email}</p>
+                <p className={`text-sm font-medium ${theme.primary.text}`}>
+                  {user.name}
+                </p>
+                <p className={`text-xs ${theme.primary.textMuted}`}>
+                  {user.email}
+                </p>
               </div>
             )}
 
@@ -187,9 +238,18 @@ function AdminLayoutContent() {
               onClick={logout}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${theme.primary.bgLight} ${theme.primary.text} ${theme.rounded.md} hover:${theme.primary.bg} ${theme.transition.base}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
               </svg>
               <span className="hidden sm:inline">Logout</span>
             </button>
@@ -241,7 +301,9 @@ function AdminLayoutContent() {
 
       {/* ── Sidebar ───────────────────────────────────────────────────────────── */}
       <aside
-        className={`fixed top-16 left-0 bottom-0 w-64 z-20 transform ${theme.transition.slow} ${
+        className={`fixed top-16 left-0 bottom-0 w-64 z-20 transform ${
+          theme.transition.slow
+        } ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 ${getThemeClasses.sidebar()}`}
       >
@@ -251,7 +313,9 @@ function AdminLayoutContent() {
               key={item.path}
               to={item.path}
               onClick={() => setIsSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 ${theme.rounded.lg} font-medium ${
+              className={`flex items-center gap-3 px-4 py-3 ${
+                theme.rounded.lg
+              } font-medium ${
                 isActive(item.path)
                   ? getThemeClasses.sidebarItemActive()
                   : getThemeClasses.sidebarItem()
@@ -263,7 +327,9 @@ function AdminLayoutContent() {
           ))}
         </nav>
 
-        <div className={`absolute bottom-0 left-0 right-0 p-4 ${theme.primary.border} border-t ${theme.primary.bg}`}>
+        <div
+          className={`absolute bottom-0 left-0 right-0 p-4 ${theme.primary.border} border-t ${theme.primary.bg}`}
+        >
           <div className={`text-xs ${theme.primary.textMuted} text-center`}>
             <p className="font-medium">QR Menu Platform</p>
             <p className="mt-1 opacity-75">Restaurant Admin Portal</p>

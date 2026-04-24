@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Category, Item } from '../../../types/menue'
 import ItemCard from './ItemCard'
 import LoadMoreButton from '../common/LoadMoreButton'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 interface CategoryCardProps {
   category: Category

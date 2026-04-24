@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { AlertCircle } from 'lucide-react'
 import Modal from '../common/Modal'
 import { Item, Category, ValidationError } from '../../../types/menue'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 interface ItemFormModalProps {
   isOpen: boolean

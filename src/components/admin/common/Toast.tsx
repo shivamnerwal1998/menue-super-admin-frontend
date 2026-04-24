@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { CheckCircle, AlertCircle, X } from 'lucide-react'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 interface ToastProps {
   message: string

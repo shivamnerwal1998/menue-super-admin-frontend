@@ -7,7 +7,7 @@ import Toast from '../../../components/admin/common/Toast'
 import PageLoader from '../../../components/admin/common/PageLoader'
 import Spinner from '../../../components/admin/common/Spinner'
 import QRCode from 'qrcode'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()

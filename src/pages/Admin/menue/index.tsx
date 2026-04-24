@@ -14,11 +14,10 @@ import CategoryFormModal from '../../../components/admin/menue/CategoryFormModal
 import ItemFormModal from '../../../components/admin/menue/ItemFormModal'
 import LoadMoreButton from '../../../components/admin/common/LoadMoreButton'
 import { categoryService, itemService } from '../../../utils/menuService'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 import { useSearch } from '../../../state/SearchContext'
 
 export default function MenuManagement() {
-
   // ── Search state lives in context ────────────────────────────────────────
   const {
     isSearchMode,
@@ -68,8 +67,12 @@ export default function MenuManagement() {
 
   const [toast, setToast] = useState<ToastType | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    [],
+  )
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set(),
+  )
 
   // ── Initial load ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function MenuManagement() {
     if (page === 1 && categories.length === 0) {
       setInitialLoading(true)
     }
-    setCategoryPagination(prev => ({ ...prev, isLoading: true }))
+    setCategoryPagination((prev) => ({ ...prev, isLoading: true }))
 
     try {
       const response = await categoryService.getAll({
@@ -98,19 +101,23 @@ export default function MenuManagement() {
         childrenCount: cat._count?.children || 0,
       }))
 
-      setCategories(prev => page === 1 ? newCategories : [...prev, ...newCategories])
+      setCategories((prev) =>
+        page === 1 ? newCategories : [...prev, ...newCategories],
+      )
 
       setCategoryPagination({
         page: response.page,
         limit: response.limit,
         total: response.total,
-        hasMore: response.total > 10 && response.page * response.limit < response.total,
+        hasMore:
+          response.total > 10 &&
+          response.page * response.limit < response.total,
         isLoading: false,
       })
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load categories error:', error)
       showToast(error.message || 'Failed to load categories', 'error')
-      setCategoryPagination(prev => ({ ...prev, isLoading: false }))
+      setCategoryPagination((prev) => ({ ...prev, isLoading: false }))
     } finally {
       setInitialLoading(false)
     }
@@ -132,25 +139,31 @@ export default function MenuManagement() {
         childrenCount: cat._count?.children || 0,
       }))
 
-      setCategories(prev => {
-        const parentIndex = prev.findIndex(c => c.id === parentId)
+      setCategories((prev) => {
+        const parentIndex = prev.findIndex((c) => c.id === parentId)
         if (parentIndex === -1) return prev
         const next = [...prev]
-        const filtered = next.filter(c => c.parentId !== parentId)
+        const filtered = next.filter((c) => c.parentId !== parentId)
         filtered.splice(parentIndex + 1, 0, ...childCategories)
         return filtered
       })
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load children error:', error)
       showToast(error.message || 'Failed to load subcategories', 'error')
     }
   }
 
   const loadItemsForCategory = async (categoryId: number, page = 1) => {
-    setItemsByCategory(prev => ({
+    setItemsByCategory((prev) => ({
       ...prev,
       [categoryId]: {
-        ...(prev[categoryId] || { items: [], page: 1, limit: 10, total: 0, hasMore: false }),
+        ...(prev[categoryId] || {
+          items: [],
+          page: 1,
+          limit: 10,
+          total: 0,
+          hasMore: false,
+        }),
         isLoading: true,
       },
     }))
@@ -164,10 +177,13 @@ export default function MenuManagement() {
         order: 'asc',
       })
 
-      setItemsByCategory(prev => ({
+      setItemsByCategory((prev) => ({
         ...prev,
         [categoryId]: {
-          items: page === 1 ? response.data : [...(prev[categoryId]?.items || []), ...response.data],
+          items:
+            page === 1
+              ? response.data
+              : [...(prev[categoryId]?.items || []), ...response.data],
           page: response.page,
           limit: response.limit,
           total: response.total,
@@ -175,13 +191,19 @@ export default function MenuManagement() {
           isLoading: false,
         },
       }))
-    } catch (error: any) {
+    } catch (error) {
       console.error('Load items error:', error)
       showToast(error.message || 'Failed to load items', 'error')
-      setItemsByCategory(prev => ({
+      setItemsByCategory((prev) => ({
         ...prev,
         [categoryId]: {
-          ...(prev[categoryId] || { items: [], page: 1, limit: 10, total: 0, hasMore: false }),
+          ...(prev[categoryId] || {
+            items: [],
+            page: 1,
+            limit: 10,
+            total: 0,
+            hasMore: false,
+          }),
           isLoading: false,
         },
       }))
@@ -193,21 +215,21 @@ export default function MenuManagement() {
     const isExpanded = expandedCategories.has(categoryId)
 
     if (isExpanded) {
-      setExpandedCategories(prev => {
+      setExpandedCategories((prev) => {
         const next = new Set(prev)
         next.delete(categoryId)
         return next
       })
     } else {
-      setExpandedCategories(prev => new Set(prev).add(categoryId))
+      setExpandedCategories((prev) => new Set(prev).add(categoryId))
 
       if (!itemsByCategory[categoryId]) {
         loadItemsForCategory(categoryId)
       }
 
-      const category = categories.find(c => c.id === categoryId)
+      const category = categories.find((c) => c.id === categoryId)
       if (category && (category as any).childrenCount > 0) {
-        const hasChildren = categories.some(c => c.parentId === categoryId)
+        const hasChildren = categories.some((c) => c.parentId === categoryId)
         if (!hasChildren) {
           loadCategoryChildren(categoryId)
         }
@@ -231,10 +253,14 @@ export default function MenuManagement() {
         })
 
         if (response.success) {
-          setCategories(cats =>
-            cats.map(c =>
+          setCategories((cats) =>
+            cats.map((c) =>
               c.id === editingCategory.id
-                ? { ...response.data, itemCount: c.itemCount, childrenCount: (c as any).childrenCount }
+                ? {
+                    ...response.data,
+                    itemCount: c.itemCount,
+                    childrenCount: (c as any).childrenCount,
+                  }
                 : c,
             ),
           )
@@ -256,18 +282,31 @@ export default function MenuManagement() {
         })
 
         if (response.success) {
-          const newCategory = { ...response.data, itemCount: 0, childrenCount: 0 }
-
-          if (newCategory.parentId) {
-            setExpandedCategories(prev => new Set(prev).add(newCategory.parentId!))
-            await loadCategoryChildren(newCategory.parentId)
-          } else {
-            setCategories(prev => [...prev, newCategory])
+          const newCategory = {
+            ...response.data,
+            itemCount: 0,
+            childrenCount: 0,
           }
 
-          setItemsByCategory(prev => ({
+          if (newCategory.parentId) {
+            setExpandedCategories((prev) =>
+              new Set(prev).add(newCategory.parentId!),
+            )
+            await loadCategoryChildren(newCategory.parentId)
+          } else {
+            setCategories((prev) => [...prev, newCategory])
+          }
+
+          setItemsByCategory((prev) => ({
             ...prev,
-            [response.data.id]: { items: [], page: 1, limit: 2, total: 0, hasMore: false, isLoading: false },
+            [response.data.id]: {
+              items: [],
+              page: 1,
+              limit: 2,
+              total: 0,
+              hasMore: false,
+              isLoading: false,
+            },
           }))
 
           showToast('Category created successfully', 'success')
@@ -275,7 +314,7 @@ export default function MenuManagement() {
           setSelectedParentId(null)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Category save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
@@ -289,12 +328,14 @@ export default function MenuManagement() {
   }
 
   const handleDeleteCategory = async (category: Category) => {
-    const hasChildren = categories.some(c => c.parentId === category.id)
+    const hasChildren = categories.some((c) => c.parentId === category.id)
     const categoryItems = itemsByCategory[category.id]?.items || []
 
     let confirmMessage = `Delete "${category.name}"?`
-    if (hasChildren) confirmMessage += '\n\nThis will also delete all subcategories.'
-    if (categoryItems.length > 0) confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
+    if (hasChildren)
+      confirmMessage += '\n\nThis will also delete all subcategories.'
+    if (categoryItems.length > 0)
+      confirmMessage += `\n\nThis category contains ${categoryItems.length} item(s).`
     confirmMessage += '\n\nThis action cannot be undone.'
 
     if (!confirm(confirmMessage)) return
@@ -303,10 +344,10 @@ export default function MenuManagement() {
       await categoryService.delete(category.id)
 
       const deleteWithChildren = (catId: number) => {
-        const children = categories.filter(c => c.parentId === catId)
-        children.forEach(child => deleteWithChildren(child.id))
-        setCategories(cats => cats.filter(c => c.id !== catId))
-        setItemsByCategory(prev => {
+        const children = categories.filter((c) => c.parentId === catId)
+        children.forEach((child) => deleteWithChildren(child.id))
+        setCategories((cats) => cats.filter((c) => c.id !== catId))
+        setItemsByCategory((prev) => {
           const next = { ...prev }
           delete next[catId]
           return next
@@ -315,7 +356,7 @@ export default function MenuManagement() {
 
       deleteWithChildren(category.id)
       showToast('Category deleted successfully', 'success')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Delete category error:', error)
       showToast(error.message || 'Failed to delete category', 'error')
     }
@@ -326,12 +367,21 @@ export default function MenuManagement() {
       const response = await categoryService.toggleActive(category.id)
 
       if (response.success) {
-        setCategories(cats =>
-          cats.map(c => c.id === category.id ? { ...c, isActive: response.data.isActive } : c),
+        setCategories((cats) =>
+          cats.map((c) =>
+            c.id === category.id
+              ? { ...c, isActive: response.data.isActive }
+              : c,
+          ),
         )
-        showToast(`Category ${response.data.isActive ? 'activated' : 'deactivated'} successfully`, 'success')
+        showToast(
+          `Category ${
+            response.data.isActive ? 'activated' : 'deactivated'
+          } successfully`,
+          'success',
+        )
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Toggle category error:', error)
       showToast(error.message || 'Failed to toggle category status', 'error')
     }
@@ -361,16 +411,18 @@ export default function MenuManagement() {
 
           if (oldCategoryId !== newCategoryId) {
             if (itemsByCategory[oldCategoryId]) {
-              setItemsByCategory(prev => ({
+              setItemsByCategory((prev) => ({
                 ...prev,
                 [oldCategoryId]: {
                   ...prev[oldCategoryId],
-                  items: prev[oldCategoryId].items.filter(i => i.id !== editingItem.id),
+                  items: prev[oldCategoryId].items.filter(
+                    (i) => i.id !== editingItem.id,
+                  ),
                   total: prev[oldCategoryId].total - 1,
                 },
               }))
-              setCategories(prev =>
-                prev.map(c =>
+              setCategories((prev) =>
+                prev.map((c) =>
                   c.id === oldCategoryId
                     ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
                     : c,
@@ -378,7 +430,7 @@ export default function MenuManagement() {
               )
             }
             if (itemsByCategory[newCategoryId]) {
-              setItemsByCategory(prev => ({
+              setItemsByCategory((prev) => ({
                 ...prev,
                 [newCategoryId]: {
                   ...prev[newCategoryId],
@@ -386,8 +438,8 @@ export default function MenuManagement() {
                   total: prev[newCategoryId].total + 1,
                 },
               }))
-              setCategories(prev =>
-                prev.map(c =>
+              setCategories((prev) =>
+                prev.map((c) =>
                   c.id === newCategoryId
                     ? { ...c, itemCount: (c.itemCount || 0) + 1 }
                     : c,
@@ -396,11 +448,13 @@ export default function MenuManagement() {
             }
           } else {
             if (itemsByCategory[oldCategoryId]) {
-              setItemsByCategory(prev => ({
+              setItemsByCategory((prev) => ({
                 ...prev,
                 [oldCategoryId]: {
                   ...prev[oldCategoryId],
-                  items: prev[oldCategoryId].items.map(i => i.id === editingItem.id ? response.data : i),
+                  items: prev[oldCategoryId].items.map((i) =>
+                    i.id === editingItem.id ? response.data : i,
+                  ),
                 },
               }))
             }
@@ -421,11 +475,13 @@ export default function MenuManagement() {
           imageUrl: data.imageUrl || null,
           isVeg: data.isVeg!,
           isAvailable: data.isAvailable!,
-          sortOrder: data.sortOrder || (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
+          sortOrder:
+            data.sortOrder ||
+            (itemsByCategory[data.categoryId!]?.items.length || 0) + 1,
         })
 
         if (response.success) {
-          setItemsByCategory(prev => ({
+          setItemsByCategory((prev) => ({
             ...prev,
             [data.categoryId!]: {
               ...prev[data.categoryId!],
@@ -433,16 +489,18 @@ export default function MenuManagement() {
               total: (prev[data.categoryId!]?.total || 0) + 1,
             },
           }))
-          setCategories(prev =>
-            prev.map(c =>
-              c.id === data.categoryId ? { ...c, itemCount: (c.itemCount || 0) + 1 } : c,
+          setCategories((prev) =>
+            prev.map((c) =>
+              c.id === data.categoryId
+                ? { ...c, itemCount: (c.itemCount || 0) + 1 }
+                : c,
             ),
           )
           showToast('Item added successfully', 'success')
           setShowItemModal(false)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Item save error:', error)
       if (error.code === 'VALIDATION_ERROR' && error.details) {
         setValidationErrors(error.details)
@@ -456,29 +514,32 @@ export default function MenuManagement() {
   }
 
   const handleDeleteItem = async (item: Item) => {
-    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`)) return
+    if (!confirm(`Delete "${item.name}"?\n\nThis action cannot be undone.`))
+      return
 
     try {
       await itemService.delete(item.id)
 
-      setItemsByCategory(prev => ({
+      setItemsByCategory((prev) => ({
         ...prev,
         [item.categoryId]: {
           ...prev[item.categoryId],
-          items: prev[item.categoryId].items.filter(i => i.id !== item.id),
+          items: prev[item.categoryId].items.filter((i) => i.id !== item.id),
           total: prev[item.categoryId].total - 1,
         },
       }))
-      setCategories(prev =>
-        prev.map(c =>
-          c.id === item.categoryId ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) } : c,
+      setCategories((prev) =>
+        prev.map((c) =>
+          c.id === item.categoryId
+            ? { ...c, itemCount: Math.max(0, (c.itemCount || 0) - 1) }
+            : c,
         ),
       )
 
       if (isSearchMode) removeSearchResult(item.id)
 
       showToast('Item deleted successfully', 'success')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Delete item error:', error)
       showToast(error.message || 'Failed to delete item', 'error')
     }
@@ -492,11 +553,13 @@ export default function MenuManagement() {
         const updatedItem = { ...item, ...response.data }
 
         if (itemsByCategory[item.categoryId]) {
-          setItemsByCategory(prev => ({
+          setItemsByCategory((prev) => ({
             ...prev,
             [item.categoryId]: {
               ...prev[item.categoryId],
-              items: prev[item.categoryId].items.map(i => i.id === item.id ? updatedItem : i),
+              items: prev[item.categoryId].items.map((i) =>
+                i.id === item.id ? updatedItem : i,
+              ),
             },
           }))
         }
@@ -504,11 +567,13 @@ export default function MenuManagement() {
         if (isSearchMode) updateSearchResult(updatedItem)
 
         showToast(
-          item.isAvailable ? 'Item marked as unavailable' : 'Item marked as available',
+          item.isAvailable
+            ? 'Item marked as unavailable'
+            : 'Item marked as available',
           'success',
         )
       }
-    } catch (error: any) {
+    } catch (error) {
       showToast(error.message || 'Failed to update item', 'error')
     }
   }
@@ -545,13 +610,14 @@ export default function MenuManagement() {
     const categoryMap = new Map<number, Category>()
     const rootCategories: Category[] = []
 
-    cats.forEach(cat => categoryMap.set(cat.id, { ...cat, children: [] }))
-    cats.forEach(cat => {
+    cats.forEach((cat) => categoryMap.set(cat.id, { ...cat, children: [] }))
+    cats.forEach((cat) => {
       const category = categoryMap.get(cat.id)!
       if (cat.parentId === null) {
         rootCategories.push(category)
       } else {
-        const parent = categoryMap.get(cat.parentId)
+        const parent =
+          cat.parentId !== undefined ? categoryMap.get(cat.parentId) : undefined
         if (parent) {
           parent.children = parent.children || []
           parent.children.push(category)
@@ -561,7 +627,7 @@ export default function MenuManagement() {
 
     const sortCategories = (categories: Category[]) => {
       categories.sort((a, b) => a.sortOrder - b.sortOrder)
-      categories.forEach(cat => {
+      categories.forEach((cat) => {
         if (cat.children?.length) sortCategories(cat.children)
       })
     }
@@ -574,7 +640,9 @@ export default function MenuManagement() {
     const categoryItems = itemsByCategory[category.id]?.items || []
     const itemsPagination = itemsByCategory[category.id]
     const isExpanded = expandedCategories.has(category.id)
-    const liveChildrenCount = categories.filter(c => c.parentId === category.id).length
+    const liveChildrenCount = categories.filter(
+      (c) => c.parentId === category.id,
+    ).length
 
     return (
       <div key={category.id}>
@@ -588,14 +656,17 @@ export default function MenuManagement() {
           onToggleActive={() => handleToggleCategoryActive(category)}
           onAddItem={() => handleOpenItemModal(undefined, category.id)}
           onAddSubcategory={
-            level < 2 ? () => handleOpenCategoryModal(undefined, category.id) : undefined
+            level < 2
+              ? () => handleOpenCategoryModal(undefined, category.id)
+              : undefined
           }
           onEditItem={(item) => handleOpenItemModal(item)}
           onDeleteItem={handleDeleteItem}
           onToggleItemAvailability={handleToggleItemAvailability}
           onLoadMoreItems={
             itemsPagination?.hasMore
-              ? () => loadItemsForCategory(category.id, itemsPagination.page + 1)
+              ? () =>
+                  loadItemsForCategory(category.id, itemsPagination.page + 1)
               : undefined
           }
           itemsPagination={
@@ -613,7 +684,9 @@ export default function MenuManagement() {
         >
           {category.children?.length && isExpanded ? (
             <div className="space-y-3 mt-3">
-              {category.children.map(child => renderCategory(child, level + 1))}
+              {category.children.map((child) =>
+                renderCategory(child, level + 1),
+              )}
             </div>
           ) : null}
         </CategoryCard>
@@ -627,18 +700,26 @@ export default function MenuManagement() {
   return (
     <div className="space-y-6">
       {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
 
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className={`text-2xl sm:text-3xl font-bold ${theme.secondary.text}`}>
+          <h1
+            className={`text-2xl sm:text-3xl font-bold ${theme.secondary.text}`}
+          >
             Menu Management
           </h1>
           <p className={`${theme.secondary.textMuted} mt-1`}>
             {isSearchMode
-              ? `Showing ${searchPagination.total} result${searchPagination.total !== 1 ? 's' : ''} for "${searchQuery}"`
+              ? `Showing ${searchPagination.total} result${
+                  searchPagination.total !== 1 ? 's' : ''
+                } for "${searchQuery}"`
               : 'Manage your categories and menu items'}
           </p>
         </div>
@@ -678,7 +759,9 @@ export default function MenuManagement() {
             <>
               <div className="grid gap-3">
                 {searchResults.map((item) => {
-                  const category = categories.find(c => c.id === item.categoryId)
+                  const category = categories.find(
+                    (c) => c.id === item.categoryId,
+                  )
                   return (
                     <div
                       key={item.id}
@@ -686,7 +769,11 @@ export default function MenuManagement() {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-medium ${theme.secondary.text} truncate`}>{item.name}</h4>
+                          <h4
+                            className={`font-medium ${theme.secondary.text} truncate`}
+                          >
+                            {item.name}
+                          </h4>
                           {item.isVeg ? (
                             <span className="w-5 h-5 flex-shrink-0 border-2 border-green-600 flex items-center justify-center">
                               <span className="w-2 h-2 rounded-full bg-green-600" />
@@ -698,7 +785,9 @@ export default function MenuManagement() {
                           )}
                         </div>
                         {item.description && (
-                          <p className={`text-sm ${theme.secondary.textMuted} mb-1 truncate`}>
+                          <p
+                            className={`text-sm ${theme.secondary.textMuted} mb-1 truncate`}
+                          >
                             {item.description}
                           </p>
                         )}
@@ -708,7 +797,9 @@ export default function MenuManagement() {
                       </div>
 
                       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-3">
-                        <span className={`text-base sm:text-lg font-semibold ${theme.secondary.text}`}>
+                        <span
+                          className={`text-base sm:text-lg font-semibold ${theme.secondary.text}`}
+                        >
                           ₹{(item.price / 100).toFixed(2)}
                         </span>
                         <button
@@ -735,7 +826,13 @@ export default function MenuManagement() {
 
               {searchPagination.hasMore && (
                 <LoadMoreButton
-                  onLoadMore={() => executeSearch(searchQuery, searchType, searchPagination.page + 1)}
+                  onLoadMore={() =>
+                    executeSearch(
+                      searchQuery,
+                      searchType,
+                      searchPagination.page + 1,
+                    )
+                  }
                   hasMore={searchPagination.hasMore}
                   isLoading={searchPagination.isLoading}
                   currentCount={searchResults.length}
@@ -753,7 +850,9 @@ export default function MenuManagement() {
         <>
           {/* Full-page spinner on initial load — no pre-filled values shown */}
           {initialLoading ? (
-            <div className={`${theme.secondary.bg} rounded-xl border ${theme.secondary.border} py-20 flex justify-center`}>
+            <div
+              className={`${theme.secondary.bg} rounded-xl border ${theme.secondary.border} py-20 flex justify-center`}
+            >
               <Spinner
                 size="lg"
                 message="Loading menu…"
@@ -769,7 +868,9 @@ export default function MenuManagement() {
               >
                 <Plus className={`w-8 h-8 ${theme.secondary.textSubtle}`} />
               </div>
-              <h3 className={`text-lg font-medium ${theme.secondary.text} mb-2`}>
+              <h3
+                className={`text-lg font-medium ${theme.secondary.text} mb-2`}
+              >
                 No categories yet
               </h3>
               <p className={`${theme.secondary.textMuted} mb-4`}>
@@ -786,7 +887,7 @@ export default function MenuManagement() {
           ) : (
             <>
               <div className="space-y-4">
-                {categoryTree.map(category => renderCategory(category, 0))}
+                {categoryTree.map((category) => renderCategory(category, 0))}
               </div>
 
               {categoryPagination.hasMore && (
@@ -794,7 +895,9 @@ export default function MenuManagement() {
                   onLoadMore={() => loadCategories(categoryPagination.page + 1)}
                   hasMore={categoryPagination.hasMore}
                   isLoading={categoryPagination.isLoading}
-                  currentCount={categories.filter(c => c.parentId === null).length}
+                  currentCount={
+                    categories.filter((c) => c.parentId === null).length
+                  }
                   totalCount={categoryPagination.total}
                   itemName="categories"
                 />

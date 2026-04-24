@@ -1,5 +1,5 @@
 import { ChevronDown, Loader2 } from 'lucide-react'
-import theme, { getThemeClasses } from '../../../configs/theme.js'
+import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 interface LoadMoreButtonProps {
   onLoadMore: () => void

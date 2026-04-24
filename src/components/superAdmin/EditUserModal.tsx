@@ -93,7 +93,7 @@ export default function EditUserModal({
         isOpen: true,
         type: 'error',
         title: 'Update Failed',
-        message: err.message || 'Failed to update user',
+        message: 'Failed to update user',
       })
     } finally {
       setLoading(false)
