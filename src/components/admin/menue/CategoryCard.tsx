@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Category, Item } from '../../../types/menue'
 import ItemCard from './ItemCard'
 import LoadMoreButton from '../common/LoadMoreButton'
+import Spinner from '../common/Spinner'
 import theme, { getThemeClasses } from '../../../configs/theme.ts'
 
 interface CategoryCardProps {
@@ -63,6 +64,9 @@ export default function CategoryCard({
   const addItemDisabled = hasSubcategories
   const addSubDisabled = hasItems
 
+  // Show spinner only on first expand — loading with no items in hand yet
+  const isInitialLoading = !!itemsPagination?.isLoading && items.length === 0
+
   const levelStyles: Record<number, string> = {
     0: theme.categoryLevel[0],
     1: theme.categoryLevel[1],
@@ -73,7 +77,11 @@ export default function CategoryCard({
   const handleAdd = () => {
     if (addType === 'item' && !addItemDisabled) {
       onAddItem()
-    } else if (addType === 'subcategory' && onAddSubcategory && !addSubDisabled) {
+    } else if (
+      addType === 'subcategory' &&
+      onAddSubcategory &&
+      !addSubDisabled
+    ) {
       onAddSubcategory()
     }
     setShowAddOptions(false)
@@ -100,35 +108,47 @@ export default function CategoryCard({
       {/* Category Header */}
       <div className={`p-4 border-b ${theme.secondary.border}`}>
         <div className="flex items-start justify-between gap-3">
-
           {/* Left: name + meta */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h3 className={`text-lg font-bold ${theme.secondary.text}`}>{category.name}</h3>
+              <h3 className={`text-lg font-bold ${theme.secondary.text}`}>
+                {category.name}
+              </h3>
               {level > 0 && (
                 <span className={getThemeClasses.badge('blue')}>
                   Level {level}
                 </span>
               )}
               {!category.isActive && (
-                <span className={getThemeClasses.badge('red')}>
-                  Inactive
-                </span>
+                <span className={getThemeClasses.badge('red')}>Inactive</span>
               )}
             </div>
             {category.description && (
-              <p className={`text-sm ${theme.secondary.textMuted} mb-2`}>{category.description}</p>
+              <p className={`text-sm ${theme.secondary.textMuted} mb-2`}>
+                {category.description}
+              </p>
             )}
-            <div className={`flex items-center gap-2 mt-2 text-sm ${theme.secondary.textMuted} flex-wrap`}>
+            <div
+              className={`flex items-center gap-2 mt-2 text-sm ${theme.secondary.textMuted} flex-wrap`}
+            >
               <span>{liveItemTotal} items</span>
-              {vegCount > 0 && <><span>•</span><span>{vegCount} veg</span></>}
-              {nonVegCount > 0 && <><span>•</span><span>{nonVegCount} non-veg</span></>}
+              {vegCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span>{vegCount} veg</span>
+                </>
+              )}
+              {nonVegCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span>{nonVegCount} non-veg</span>
+                </>
+              )}
             </div>
           </div>
 
           {/* Right: action buttons */}
           <div className="flex items-center gap-2 flex-wrap">
-
             {/* Add button */}
             {!showAddOptions ? (
               <button
@@ -162,28 +182,41 @@ export default function CategoryCard({
             {/* Toggle Active */}
             {onToggleActive && (
               <button
-                onClick={(e) => { e.stopPropagation(); onToggleActive() }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleActive()
+                }}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${
                   category.isActive
                     ? `${theme.status.success.bg} ${theme.status.success.text} hover:bg-green-200 border ${theme.status.success.borderStrong}`
                     : `${theme.secondary.bgMuted} ${theme.secondary.text} hover:${theme.secondary.bgHover} border ${theme.secondary.border}`
                 }`}
-                title={category.isActive ? 'Click to deactivate' : 'Click to activate'}
+                title={
+                  category.isActive
+                    ? 'Click to deactivate'
+                    : 'Click to activate'
+                }
               >
                 {category.isActive ? '✓ Active' : '○ Inactive'}
               </button>
             )}
 
             <button
-              onClick={(e) => { e.stopPropagation(); onEdit() }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
               className={`p-2 hover:${theme.secondary.bgMuted} rounded-lg transition`}
               title="Edit category"
             >
               <Edit2 className={`w-4 h-4 ${theme.secondary.textMuted}`} />
             </button>
 
-                        <button
-              onClick={(e) => { e.stopPropagation(); onDelete() }}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
               className="p-2 hover:bg-red-50 rounded-lg transition"
               title="Delete category"
             >
@@ -191,10 +224,15 @@ export default function CategoryCard({
             </button>
 
             {/* Chevron */}
-            <button onClick={onToggleExpand} className={`p-2 hover:${theme.secondary.bgMuted} rounded-lg transition`}>
+            <button
+              onClick={onToggleExpand}
+              className={`p-2 hover:${theme.secondary.bgMuted} rounded-lg transition`}
+            >
               <ChevronDown
                 className={`w-5 h-5 ${theme.secondary.textMuted} transition-transform duration-300 ease-in-out`}
-                style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                style={{
+                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                }}
               />
             </button>
           </div>
@@ -203,11 +241,18 @@ export default function CategoryCard({
         {/* Add Options picker */}
         {showAddOptions && (
           <div className={`mt-3 pt-3 border-t ${theme.secondary.border}`}>
-            <div className={`${theme.secondary.bgMuted} border ${theme.secondary.border} rounded-lg p-3 space-y-2`}>
-
+            <div
+              className={`${theme.secondary.bgMuted} border ${theme.secondary.border} rounded-lg p-3 space-y-2`}
+            >
               {/* Add Item option */}
               <div className="relative group/item">
-                <label className={`flex items-center gap-2 ${addItemDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                <label
+                  className={`flex items-center gap-2 ${
+                    addItemDisabled
+                      ? 'cursor-not-allowed opacity-50'
+                      : 'cursor-pointer'
+                  }`}
+                >
                   <input
                     type="radio"
                     name={`add-type-${category.id}`}
@@ -216,9 +261,15 @@ export default function CategoryCard({
                     disabled={addItemDisabled}
                     className={`w-4 h-4 ${theme.accent.textDark} border-gray-300 focus:ring-indigo-500 disabled:cursor-not-allowed`}
                   />
-                  <span className={`text-sm font-medium ${theme.secondary.text}`}>Add Item</span>
+                  <span
+                    className={`text-sm font-medium ${theme.secondary.text}`}
+                  >
+                    Add Item
+                  </span>
                   {addItemDisabled && (
-                    <span className={`text-xs ${theme.status.error.icon}`}>(not allowed)</span>
+                    <span className={`text-xs ${theme.status.error.icon}`}>
+                      (not allowed)
+                    </span>
                   )}
                 </label>
                 {addItemDisabled && (
@@ -232,18 +283,32 @@ export default function CategoryCard({
               {/* Add Subcategory option */}
               {level < 2 && onAddSubcategory && (
                 <div className="relative group/sub">
-                  <label className={`flex items-center gap-2 ${addSubDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                  <label
+                    className={`flex items-center gap-2 ${
+                      addSubDisabled
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name={`add-type-${category.id}`}
                       checked={addType === 'subcategory'}
-                      onChange={() => !addSubDisabled && setAddType('subcategory')}
+                      onChange={() =>
+                        !addSubDisabled && setAddType('subcategory')
+                      }
                       disabled={addSubDisabled}
                       className={`w-4 h-4 ${theme.accent.textDark} border-gray-300 focus:ring-indigo-500 disabled:cursor-not-allowed`}
                     />
-                    <span className={`text-sm font-medium ${theme.secondary.text}`}>Add Subcategory</span>
+                    <span
+                      className={`text-sm font-medium ${theme.secondary.text}`}
+                    >
+                      Add Subcategory
+                    </span>
                     {addSubDisabled && (
-                      <span className={`text-xs ${theme.status.error.icon}`}>(not allowed)</span>
+                      <span className={`text-xs ${theme.status.error.icon}`}>
+                        (not allowed)
+                      </span>
                     )}
                   </label>
                   {addSubDisabled && (
@@ -261,13 +326,21 @@ export default function CategoryCard({
 
       {/* Subcategories */}
       {isExpanded && children && (
-        <div className={`p-4 space-y-3 ${theme.secondary.bgMuted}/50`}>{children}</div>
+        <div className={`p-4 space-y-3 ${theme.secondary.bgMuted}/50`}>
+          {children}
+        </div>
       )}
 
       {/* Items */}
       {isExpanded && (
         <div className="p-4">
-          {items.length === 0 ? <div /> : (
+          {isInitialLoading ? (
+            <div className="flex justify-center py-6">
+              <Spinner size="sm" />
+            </div>
+          ) : items.length === 0 ? (
+            <div />
+          ) : (
             <>
               <div className="grid gap-3">
                 {items.map((item) => (
