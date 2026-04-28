@@ -1,5 +1,5 @@
 // src/components/admin/menue/CategoryCard.tsx
-import { Edit2, ChevronDown, Plus } from 'lucide-react'
+import { Edit2, ChevronDown, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Category, Item } from '../../../types/menue'
 import ItemCard from './ItemCard'
@@ -180,6 +180,14 @@ export default function CategoryCard({
               title="Edit category"
             >
               <Edit2 className={`w-4 h-4 ${theme.secondary.textMuted}`} />
+            </button>
+
+                        <button
+              onClick={(e) => { e.stopPropagation(); onDelete() }}
+              className="p-2 hover:bg-red-50 rounded-lg transition"
+              title="Delete category"
+            >
+              <Trash2 className="w-4 h-4 text-red-600" />
             </button>
 
             {/* Chevron */}
