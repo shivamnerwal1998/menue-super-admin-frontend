@@ -142,7 +142,7 @@ export default function CategoryCard({
             )}
 
             <div
-              className={`flex items-center gap-2 mt-2 text-sm ${theme.secondary.textMuted} flex-wrap`}
+              className={`flex items-center gap-2 mt-2 text-sm ${theme.secondary.textMuted} flex-wrap hidden`}
             >
               <span>{liveItemTotal} items</span>
               {vegCount > 0 && (
