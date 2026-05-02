@@ -22,7 +22,7 @@ export default function ItemCard({
 
   return (
     <div
-      className={`border-2 rounded-lg p-4 transition ${
+      className={`border-2 rounded-lg p-4 transition overflow-hidden ${
         isSample
           ? `border-l-4 border-l-orange-500 ${theme.status.warning.bgLight}`
           : `${theme.secondary.bg} ${theme.secondary.border} hover:shadow-md`
@@ -38,9 +38,14 @@ export default function ItemCard({
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <h4 className={`font-semibold ${theme.secondary.text} mb-1`}>
+      {/* ✅ FIX 2: w-full on the flex row so it never exceeds card width */}
+      <div className="flex items-start justify-between gap-3 w-full">
+        {/* ✅ FIX 3: min-w-0 + overflow-hidden on the text column */}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          {/* ✅ FIX 4: truncate long item names gracefully */}
+          <h4
+            className={`font-semibold ${theme.secondary.text} mb-1 break-words`}
+          >
             {item.name}
           </h4>
 
@@ -59,8 +64,11 @@ export default function ItemCard({
           </div>
 
           {item.description && (
+            // ✅ FIX 5: break-all handles strings with zero spaces (like your test case)
+            // overflow-wrap: anywhere as inline style is the nuclear option fallback
             <p
-              className={`text-sm ${theme.secondary.textMuted} line-clamp-2 mb-2`}
+              className={`text-sm ${theme.secondary.textMuted} leading-relaxed mb-2`}
+              style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
             >
               {item.description}
             </p>

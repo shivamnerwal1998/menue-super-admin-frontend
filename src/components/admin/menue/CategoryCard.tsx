@@ -64,7 +64,6 @@ export default function CategoryCard({
   const addItemDisabled = hasSubcategories
   const addSubDisabled = hasItems
 
-  // Show spinner only on first expand — loading with no items in hand yet
   const isInitialLoading = !!itemsPagination?.isLoading && items.length === 0
 
   const levelStyles: Record<number, string> = {
@@ -104,14 +103,22 @@ export default function CategoryCard({
   }
 
   return (
-    <div className={`rounded-xl border shadow-sm ${levelClass}`}>
+    // ✅ FIX 1: overflow-hidden on root card
+    <div
+      className={`rounded-xl border shadow-sm overflow-hidden ${levelClass}`}
+    >
       {/* Category Header */}
-      <div className={`p-4 border-b ${theme.secondary.border}`}>
-        <div className="flex items-start justify-between gap-3">
-          {/* Left: name + meta */}
-          <div className="flex-1">
+      {/* ✅ FIX 2: overflow-hidden on header section too */}
+      <div className={`p-4 border-b overflow-hidden ${theme.secondary.border}`}>
+        {/* ✅ FIX 3: w-full on the flex row */}
+        <div className="flex items-start justify-between gap-3 w-full">
+          {/* Left: name + meta — ✅ FIX 4: min-w-0 + overflow-hidden */}
+          <div className="flex-1 min-w-0 overflow-hidden">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <h3 className={`text-lg font-bold ${theme.secondary.text}`}>
+              {/* ✅ FIX 5: break-words on category name */}
+              <h3
+                className={`text-lg font-bold ${theme.secondary.text} break-words`}
+              >
                 {category.name}
               </h3>
               {level > 0 && (
@@ -123,11 +130,17 @@ export default function CategoryCard({
                 <span className={getThemeClasses.badge('red')}>Inactive</span>
               )}
             </div>
+
             {category.description && (
-              <p className={`text-sm ${theme.secondary.textMuted} mb-2`}>
+              // ✅ FIX 6: same nuclear fix as ItemCard — inline style for overflowWrap
+              <p
+                className={`text-sm ${theme.secondary.textMuted} leading-relaxed mb-2`}
+                style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+              >
                 {category.description}
               </p>
             )}
+
             <div
               className={`flex items-center gap-2 mt-2 text-sm ${theme.secondary.textMuted} flex-wrap`}
             >
@@ -147,8 +160,8 @@ export default function CategoryCard({
             </div>
           </div>
 
-          {/* Right: action buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Right: action buttons — flex-shrink-0 so buttons never get squished */}
+          <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
             {/* Add button */}
             {!showAddOptions ? (
               <button
